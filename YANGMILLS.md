@@ -40,6 +40,17 @@ None of the papers below is about Yang-Mills, and the repository does not link t
 
 A keyword search of the CONTENTS summaries, the Lean documentation and the preprint titles found no papers on lattice gauge theory, Wilson loops, confinement or the area law, and none constructing an interacting four-dimensional quantum field theory. This was a search of summaries and titles, not of every paper's full text. The gap between the two-dimensional sigma-model results above and 4D Yang-Mills is therefore the open part, and the repository gives no indication of how it would be bridged.
 
+## Companion tooling outside this repository
+
+Two other repositories work on the Yang-Mills side of this question with code. Neither is part of the OpenAI release, and neither claims to prove existence or a mass gap.
+
+- [yang-mills-mass-gap-lab](https://github.com/brentharts/yang-mills-mass-gap-lab) (fork of Michael Elsbernd's `ymlab`) is a finite-lattice SU(2) and SU(3) simulation laboratory with Wilson loops, Creutz ratios and correlator analysis. An added findings page compares the asymptotic-freedom scaling of this repository's 2D O(N) Monte Carlo ([tools/on_model_mc.py](tools/on_model_mc.py)) with small 4D SU(2) lattices: the O(N) local slopes of ln m approach the leading asymptotic-freedom form from below as the correlation length grows to about ten lattice spacings, while the SU(2) lattices scanned are not in the scaling regime.
+- [RosettaMath](https://github.com/brentharts/RosettaMath) holds a knowledge graph of physics equations. Its "Lattice spin models" group takes nine equations from this repository's tools (O(N) mass scaling, Kosterlitz flow, Bloch magnon density, Haldane gap and others) and cites them to this repository by tool, with a bridge module that evaluates them with its own algebra and compares against the numbers `make models` produces here.
+
+These are numerical and bookkeeping aids. The gap noted above, between two-dimensional sigma models and four-dimensional Yang-Mills, is unchanged.
+
+Neutral overview of the problem and its status: [nLab: Yang-Mills mass gap](https://ncatlab.org/nlab/show/Yang-Mills+mass+gap).
+
 ## Why this page exists
 
 This repository publishes the model's math manuscripts and their Lean formalizations. The Yang-Mills material is deliberately not part of that release, so this page records the gap and gives one place to update when something is published.

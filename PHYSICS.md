@@ -67,6 +67,8 @@ Gap proofs are the closest technical cousin to a mass-gap statement, though in f
 
 The [tools/](tools/README.md) folder has Python scripts that model four of these results with numpy, scipy, sympy and matplotlib, and a top-level [Makefile](Makefile) that builds a PDF report with `pdflatex`. They cover Bloch's law and its lattice correction [271], 2D O(N) mass scaling [215], the XY model's BKT scaling [216], and the spin-1 Haldane gap [268]. They are illustrations with built-in consistency checks, not re-proofs of the papers.
 
+The model scripts are also read by [RosettaMath](https://github.com/brentharts/RosettaMath) (group "Lattice spin models", checked by its `rosettaoai.py`), and the O(N) output is compared with SU(2) lattice data in [yang-mills-mass-gap-lab](https://github.com/brentharts/yang-mills-mass-gap-lab). See [YANGMILLS.md](YANGMILLS.md).
+
 ## Reasoning summaries
 
 The repository releases abridged summaries of the model's reasoning for ten results (the table is in the main README). Three are physics-related, all in [reasoning_traces](reasoning_traces/):
