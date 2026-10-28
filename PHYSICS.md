@@ -63,6 +63,10 @@ Gap proofs are the closest technical cousin to a mass-gap statement, though in f
 | [264] | Strong cosmic censorship near Kerr | Local strong cosmic censorship near two-ended Kerr data. |
 | [348] | Einstein four-manifolds | Classification of nonnegatively curved Einstein four-manifolds and an L² topological gap. |
 
+## Computational models
+
+The [tools/](tools/README.md) folder has Python scripts that model four of these results with numpy, scipy, sympy and matplotlib, and a top-level [Makefile](Makefile) that builds a PDF report with `pdflatex`. They cover Bloch's law and its lattice correction [271], 2D O(N) mass scaling [215], the XY model's BKT scaling [216], and the spin-1 Haldane gap [268]. They are illustrations with built-in consistency checks, not re-proofs of the papers.
+
 ## Reasoning summaries
 
 The repository releases abridged summaries of the model's reasoning for ten results (the table is in the main README). Three are physics-related, all in [reasoning_traces](reasoning_traces/):
