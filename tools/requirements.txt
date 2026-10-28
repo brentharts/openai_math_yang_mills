@@ -1,0 +1,7 @@
+numpy
+scipy
+sympy
+matplotlib
+# Optional: speeds up the Monte Carlo in tools/on_model_mc.py by roughly 100x.
+# The script falls back to plain Python (with reduced statistics) without it.
+numba
