@@ -1,59 +1,53 @@
-# tools/: physics models and the PDF report
+# Readme
 
-Python scripts that model results from the physics-related preprints in this repository, using numpy/scipy for numerics, sympy for symbolic derivations, and matplotlib for figures. Each script also writes LaTeX, and `make` assembles it into a PDF with `pdflatex`.
+This repository contains mathematical manuscripts and supporting proof artifacts produced by an unnamed internal OpenAI model. 
 
-These are fork-level illustrations. They are not part of the OpenAI release, and none of them re-proves a repository theorem. See [PHYSICS.md](../PHYSICS.md) for the physics-related papers in the repository and [YANGMILLS.md](../YANGMILLS.md) for the Yang-Mills discussion.
+As part of model development, we evaluate our models on open research problems. We expanded these evaluations after performance on our existing mathematical evaluations saturated. Some outputs build upon earlier results produced by the models.
 
-## Quick start
+This collection includes results at different stages of verification. Not all have accompanying Lean formalizations. We will continue to update this repository with Lean formalizations as we obtain them. 
 
-From the repository root:
+Some of the unformalized results could have issues. We will endeavor to fix any such issues quickly.
+We are also exploring community-hosted repositories for these materials. 
 
-```sh
-make setup     # pip install -r tools/requirements.txt
-make           # run every model, then build build/physics_models.pdf
-make full      # longer Monte Carlo runs and one more ring size (several minutes)
-make help      # list all targets
-```
+In our view, these manuscripts are best understood as a form of raw research data, rather than polished academic papers. We defer to the math community completely on matters of credit, precedence, and concurrent work.
 
-Requirements: Python 3, a TeX Live install with `pdflatex`, and the packages in [requirements.txt](requirements.txt). numba is optional but makes the Monte Carlo roughly 100 times faster.
+## Navigating the collection
 
-Output goes to `build/` (ignored by git): `build/figures/` (PDF and PNG), `build/tex/` (LaTeX fragments), `build/data/` (raw numbers as JSON) and `build/physics_models.pdf`.
+The current catalogue contains 721 manuscripts organized into 373 families. A family groups related papers, which may include a principal result, companion arguments, consequences, or alternative proofs. Each family is classified by mathematical discipline.
 
-## The models
+- Start with the [overview](overview.pdf) for descriptions of the families.
+- Use the [manuscript map](CONTENTS.md) to find individual papers and their supporting materials.
+- The [`preprints/`](preprints/) directory contains PDFs, source files, and manuscript-specific citation and build instructions.
+- The [Lean library](lean/README.md) and [formalization catalogue](lean/formalization.yaml) describe the available formal proofs, their associated papers, and verification configurations. See the [Comparator instructions](lean/ComparatorChallenges/README.md) for additional checking instructions. The repository has ~42% top-line results formalized.
+- Updates to the repo are described in the [history](history.md).
 
-| Script | Repo entry | What it computes |
-|---|---|---|
-| [bloch_law.py](bloch_law.py) | 271 | Ideal-magnon density of the 3D Heisenberg ferromagnet as an exact Bessel-function sum. Sympy derives its large-β expansion and checks that the leading coefficient is Bloch's and the next is the lattice correction `3ζ(5/2)/(128π^{3/2})` quoted in the repository's paper. |
-| [on_model_mc.py](on_model_mc.py) | 215 | Wolff cluster Monte Carlo for the 2D O(3) and O(4) lattice models: susceptibility and second-moment correlation length against β, compared with the asymptotic-freedom form `β^{1/(N-2)} e^{-2πβ/(N-2)}`. Sympy handles the scaling forms and the coupling drift. |
-| [kt_flow.py](kt_flow.py) | 216 | Kosterlitz RG flow for the XY model. Sympy solves it exactly (conserved quantity, closed-form correlation length, `μ ln ξ → π`) and derives the `r^{-1/4} (ln r)^{1/8}` form of the critical correlation function. Scipy checks the closed forms. |
-| [haldane_gap.py](haldane_gap.py) | 268 | Exact diagonalization of periodic spin-1 rings, gap against L, and the gap across the bilinear-biquadratic family. Validated against the exact AKLT energy and known spin-1/2 ring energies. |
+### Reasoning summaries
 
-Support files: [common.py](common.py) (paths, plotting style, LaTeX helpers), [make_summary.py](make_summary.py) (headline-results table), and [templates/physics_models.tex](templates/physics_models.tex) (the report skeleton).
+We are also releasing abridged summaries of the model's reasoning, covering the following results:
 
-## How the checks work
+| Family | Subject |
+|---|---|
+| 007 | [Ordinary two-point correlations of multiplicative functions](reasoning_traces/ordinary-two-point-correlations.pdf) |
+| 017 | [The irrationality exponent of π](reasoning_traces/irrationality-exponent-of-pi.pdf) |
+| 087 | [Symmetric and general Mahler conjectures](reasoning_traces/symmetric-and-general-mahler-conjectures.pdf) |
+| 102 | [Ordinary NP-hardness at the basic semidefinite threshold](reasoning_traces/basic-semidefinite-threshold-np-hardness.pdf) |
+| 159 | [Quasipolynomial bounds for arithmetic progressions](reasoning_traces/quasipolynomial-arithmetic-progressions.pdf) |
+| 197 | [Kaplansky's direct-finiteness conjecture in characteristic two](reasoning_traces/kaplansky-direct-finiteness-characteristic-two.pdf) |
+| 221 | [The Mézard–Parisi formula for diluted spin glasses](reasoning_traces/mezard-parisi-formula.pdf) |
+| 271 | [Spontaneous magnetization in the quantum Heisenberg ferromagnet](reasoning_traces/spontaneous-magnetization-quantum-heisenberg-ferromagnet.pdf) |
+| 287 | [Isomorphism of free group factors](reasoning_traces/free-group-factor-isomorphism.pdf) |
+| 362 | [The three-dimensional relativistic Vlasov–Maxwell system](reasoning_traces/relativistic-vlasov-maxwell.pdf) |
 
-Every script ends with assertions through `common.check`. If one fails, the script exits nonzero and `make` stops, so a PDF only exists if the numerics agreed with the exact results they are tested against (for example the AKLT ground-state energy, the Bloch correction coefficient, and numerical against closed-form correlation lengths). Monte Carlo seeds are fixed, so results are reproducible on the same software versions.
 
-Each section of the PDF states what its model does not test. In particular the Monte Carlo compares a second-moment mass with the shape of an asymptotic formula, not with the transfer-matrix gap, and the Haldane-gap extrapolation uses an assumed finite-size form.
+## How the results were produced
 
-## Running one model
+The vast majority of results were obtained with the same procedure using an unreleased internal OpenAI model. On average, each result used three hours of ChatGPT Pro thinking compute with that model. Over the course of the evaluation, the model was posed approximately 4,000 problems. Aggregating the output into result families and manuscripts and requiring an appropriate level of significance led to the catalog outlined above.
 
-```sh
-make bloch       # or: on, kt, haldane
-python3 tools/haldane_gap.py --full
-```
+Exceptions to this fixed procedure include work on a zero-free region for the Riemann zeta function and proof of the Hodge Conjecture for CM abelian varieties. Additionally, the writeup for the Re(s) > 11/12 zero-free region for the Riemann zeta function was human edited for readability. 
 
-Typical run times on a laptop: Bloch and KT about 3 seconds each, Haldane about 6 seconds, the quick Monte Carlo about one minute.
 
-## Adding a model
+## Versions and citations
 
-1. Add `tools/<name>.py` that writes `build/tex/<name>.tex` (a LaTeX section), figures through `common.savefig`, and a JSON file through `common.save_json`.
-2. Add the script name to `SCRIPTS` in the Makefile, and `\input{tex/<name>.tex}` to the template.
-3. Add a row to [make_summary.py](make_summary.py) if it has a headline number.
+We will preserve the public release history of this collection. Corrections and revisions will be recorded as new versions, with previously released versions remaining accessible. 
 
-## Used by other repositories
-
-- RosettaMath's `rosettaoai.py` reads `build/data/*.json` (set `OPENAI_MATH_DIR` if the checkouts are not side by side) and checks nine library equations against it. Run `make models` first.
-- yang-mills-mass-gap-lab imports `build/data/on_model_mc.json` with `ymlab.scaling_comparison.import_fork()`, recording this repository's commit hash with the data.
-
-Changing a script's JSON keys breaks both readers.
+To cite the individual manuscript, use the BibTeX block in its directory. 
