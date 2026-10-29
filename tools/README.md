@@ -50,3 +50,10 @@ Typical run times on a laptop: Bloch and KT about 3 seconds each, Haldane about 
 1. Add `tools/<name>.py` that writes `build/tex/<name>.tex` (a LaTeX section), figures through `common.savefig`, and a JSON file through `common.save_json`.
 2. Add the script name to `SCRIPTS` in the Makefile, and `\input{tex/<name>.tex}` to the template.
 3. Add a row to [make_summary.py](make_summary.py) if it has a headline number.
+
+## Used by other repositories
+
+- RosettaMath's `rosettaoai.py` reads `build/data/*.json` (set `OPENAI_MATH_DIR` if the checkouts are not side by side) and checks nine library equations against it. Run `make models` first.
+- yang-mills-mass-gap-lab imports `build/data/on_model_mc.json` with `ymlab.scaling_comparison.import_fork()`, recording this repository's commit hash with the data.
+
+Changing a script's JSON keys breaks both readers.
