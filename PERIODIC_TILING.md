@@ -113,6 +113,8 @@ Bhattacharya (periodicity of tilings of ℤ²); Greenfeld and Tao (structure of 
 
 ## Related pages
 
+- [SPECTRE_CHAIR44.md](SPECTRE_CHAIR44.md) for a citation-level comparison with the Spectre and Chair44.
+- [MONOTILES.md](MONOTILES.md) for how entry 155 compares with the 2026 three-dimensional aperiodic monotile (Chair44) papers and their matching-rule variants.
 - [TILING.md](TILING.md) for the other tiling, dimer, matching and packing papers.
 - [COMPLEXITY.md](COMPLEXITY.md) for the complexity side. Nothing in the repository connects entry 155 to it.
 

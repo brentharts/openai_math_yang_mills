@@ -114,6 +114,8 @@ A search of summaries and titles found no papers on Wang tiles, Penrose or other
 ## Related pages
 
 - [PERIODIC_TILING.md](PERIODIC_TILING.md) for entry 155 in depth.
+- [SPECTRE_CHAIR44.md](SPECTRE_CHAIR44.md) for the Spectre and Chair44 compared with entry 155, with section-level citations.
+- [MONOTILES.md](MONOTILES.md) for entry 155 next to the Chair44 aperiodic monotile and its matching rules.
 - [COMPLEXITY.md](COMPLEXITY.md) and [ETH.md](ETH.md) for the algorithmic side of perfect matchings.
 - [PHYSICS.md](PHYSICS.md) for the lattice-model and height-function papers.
 
