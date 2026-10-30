@@ -449,6 +449,8 @@ class KBEquation:
     @property
     def entry(self) -> str:
         """CONTENTS.md entry of the script this equation was drawn from, or ''."""
+        if self.name in EXTRA_ENTRY:
+            return EXTRA_ENTRY[self.name]
         m = re.search(r"(tools/[A-Za-z0-9_]+\.py)", self.source or "")
         return SCRIPT_ENTRY.get(m.group(1), "") if m else ""
 
@@ -507,6 +509,8 @@ MANUSCRIPTS = {
     "oai-haldane": ("H", "268", "The-periodic-spin-one-Haldane-gap-September-24-2026"),
     "oai-tiling": ("T", "155", "A-translational-tile-with-no-fully-periodic-tiling-in-dimension-three-September-23-2026"),
     "oai-o4-mass": ("O4", "215", "Exact-mass-asymptotics-for-the-two-dimensional-O4-lattice-model-October-5-2026"),
+    "oai-e229": ("E229", "229", "The-exact-reconstruction-threshold-for-the-three-state-symmetric-channel-September-25-2026"),
+    "oai-e304": ("E304", "304", "The-Hilbert-Smith-conjecture-in-every-finite-dimension-September-23-2026"),
     "oai-o3-limit": ("O3", "215", "The-canonical-massive-continuum-limit-of-the-two-dimensional-O3-model-October-4-2026"),
 }
 ROSETTAMATH = {
@@ -514,6 +518,49 @@ ROSETTAMATH = {
     "year": 2026, "repo": "brentharts/RosettaMath", "tag": "rosettamath",
     "url": "https://github.com/brentharts/RosettaMath",
     "note": "rosettaphys.py (the knowledge base) and rosettapaper.py (the generated paper); MIT licence.",
+}
+
+
+# Pseudo-entries: groups of equations that belong to no CONTENTS entry but to a companion note.
+PSEUDO_ENTRIES = {   # key -> (short label for tables, section title)
+    "spectre-chair44": ("SC", "The Spectre, Chair44 and the clock tests (companion notes)"),
+}
+
+# References outside the OpenAI release, as the fork's notes cite them (SPECTRE_CHAIR44.md, "Citation key").
+EXTERNAL = {
+    "hartshorn-romanov": dict(
+        tag="HR", entry="spectre-chair44", authors="B. Hartshorn and T. Romanov",
+        title="The Internal Space and Boundary Growth of the Spectre and Tsiokos's Chair44 Tilings",
+        year=2026, url="https://www.researchsquare.com/article/rs-11516041/v1", doi="10.21203/rs.3.rs-11516041/v1",
+        note="Research Square preprint, 28 Oct 2026.", status="Not peer reviewed."),
+    "tsiokos-chair44": dict(
+        tag="T", entry="spectre-chair44", authors="I. Tsiokos",
+        title="A Strongly Aperiodic Monotile in Three Dimensions",
+        year=2026, url="https://arxiv.org/abs/2609.19214",
+        note="arXiv:2609.19214, revision 2 of 16 Sep 2026.",
+        status="Presented as a proof submission until refereed; not peer reviewed."),
+    "goodman-strauss-notes": dict(
+        tag="GS", entry="spectre-chair44", authors="C. Goodman-Strauss",
+        title="Notes on a strongly aperiodic monotile in E^3",
+        year=2026, url="https://arxiv.org/abs/2609.24779", note="arXiv:2609.24779.", status="arXiv preprint."),
+    "flicker-matching": dict(
+        tag="F", entry="spectre-chair44", authors="F. Flicker",
+        title="Matching Rules for a Three-Dimensional Strongly Aperiodic Monotile",
+        year=2026, url="https://arxiv.org/abs/2609.23783", note="arXiv:2609.23783v2, 30 Sep 2026.",
+        status="arXiv preprint."),
+    "spectre-sm": dict(
+        tag="SM", entry="spectre-chair44", authors="D. Smith, J. S. Myers, C. S. Kaplan and C. Goodman-Strauss",
+        title="A chiral aperiodic monotile", year=2023, url="https://arxiv.org/abs/2305.17743v2",
+        note="arXiv:2305.17743 (the Spectre).", status="arXiv preprint."),
+    "greenfeld-tao-2022": dict(
+        tag="GT22", entry="spectre-chair44", authors="R. Greenfeld and T. Tao",
+        title="A Counterexample to the Periodic Tiling Conjecture (Announcement)", year=2022,
+        url="https://arxiv.org/abs/2209.08451", note="arXiv:2209.08451, Sep 2022.", status="arXiv announcement."),
+    "tao-blog-2022": dict(
+        tag="Tao", entry="spectre-chair44", authors="T. Tao",
+        title="A counterexample to the periodic tiling conjecture (blog post)", year=2022,
+        url="https://terrytao.wordpress.com/2022/11/29/a-counterexample-to-the-periodic-tiling-conjecture-2/",
+        note="29 Nov 2022, on the full paper arXiv:2211.15847.", status="Blog post."),
 }
 
 
@@ -527,8 +574,10 @@ class Reference:
     kind: str                 # "preprint" | "repository"
     note: str = ""
     tag: str = ""             # how the models' source strings abbreviate it: "[Log]"
-    entry: str = ""           # CONTENTS entry, for a manuscript
+    entry: str = ""           # CONTENTS entry (or a pseudo-entry such as "spectre-chair44"), for a manuscript
     repo: str = ""            # owner/name, for a repository
+    doi: str = ""
+    status: str = ""          # review status, printed in the bibliography ("Not peer reviewed.")
 
 
 def _manuscript(key: str, tag: str, entry: str, directory: str) -> Reference:
@@ -551,6 +600,9 @@ def _manuscript(key: str, tag: str, entry: str, directory: str) -> Reference:
 def references() -> dict[str, Reference]:
     """Every reference the document can cite, by key: manuscripts, then repositories."""
     out = {k: _manuscript(k, *v) for k, v in MANUSCRIPTS.items()}
+    for key, r in EXTERNAL.items():
+        out[key] = Reference(key, r["authors"], r["title"], r["year"], r["url"], "article", note=r["note"],
+                             tag=r["tag"], entry=r["entry"], doi=r.get("doi", ""), status=r.get("status", ""))
     for key, r in {**REFERENCES_DATA, "rosettamath": ROSETTAMATH}.items():
         title = r["title"] + (": " + r["subtitle"] if r.get("subtitle") else "")
         out[key] = Reference(key, r["authors"], title, r["year"], r["url"], "repository",
@@ -567,7 +619,8 @@ def reference_for_source(source: str | None) -> str | None:
 
 
 def manuscripts_for(entry: str) -> list[Reference]:
-    return [r for r in references().values() if r.kind == "preprint" and r.entry == entry]
+    """The manuscripts and articles an entry (or pseudo-entry) rests on, in the order listed above."""
+    return [r for r in references().values() if r.kind in ("preprint", "article") and r.entry == entry]
 
 
 def citations_for(eq) -> list[str]:
@@ -576,8 +629,9 @@ def citations_for(eq) -> list[str]:
     refs = references()
     keys: list[str] = []
     for tag in re.findall(r"\[([A-Za-z0-9]+)\]", eq.source or ""):
-        keys += [k for k, r in refs.items() if r.kind == "preprint" and r.tag == tag
-                 and (not eq.entry or r.entry == eq.entry)]
+        pool = [k for k, r in refs.items() if r.kind in ("preprint", "article") and r.tag == tag]
+        here = [k for k in pool if refs[k].entry == eq.entry]
+        keys += here or (pool if len(pool) == 1 else [])
     for k, r in refs.items():
         if r.repo and r.repo in (eq.source or ""):
             keys.append(k)
@@ -606,12 +660,12 @@ def wikipedia_url(slug_: str | None) -> str | None:
 # --------------------------------------------------------------------------------------
 class Library:
     def __init__(self):
-        self.quantities = {q[0]: Quantity(*q[:4]) for q in QUANTITIES_DATA}
+        self.quantities = {q[0]: Quantity(*q[:4]) for q in QUANTITIES_DATA + EXTRA_QUANTITIES}
         self.equations: dict[str, KBEquation] = {}
-        for name, fld, latex, source, slug, blurb in EQUATIONS_DATA:
-            self.equations[name] = KBEquation(name, fld, latex, source, slug, blurb,
-                                              dict(READINGS_DATA.get(name, {})))
-        self.links = [(a, kind, b, note) for a, kind, b, note in LINKS_DATA]
+        readings = {**READINGS_DATA, **EXTRA_READINGS}
+        for name, fld, latex, source, slug, blurb in EQUATIONS_DATA + EXTRA_EQUATIONS:
+            self.equations[name] = KBEquation(name, fld, latex, source, slug, blurb, dict(readings.get(name, {})))
+        self.links = [(a, kind, b, note) for a, kind, b, note in LINKS_DATA + EXTRA_LINKS]
         self.graph = self._build()
         self._solutions: dict = {}
 
@@ -621,8 +675,8 @@ class Library:
             g.add(Node("quantity", q.name, q.name, {"quantity": q}))
         for eq in self.equations.values():
             eq.node = g.add(Node("equation", eq.name, eq.name, {"equation": eq}))
-        for entry in sorted(set(SCRIPT_ENTRY.values())):
-            g.add(Node("entry", entry, f"entry {entry}"))
+        for entry in sorted(set(SCRIPT_ENTRY.values()) | set(EXTRA_ENTRY.values())):
+            g.add(Node("entry", entry, f"entry {entry}" if entry.isdigit() else PSEUDO_ENTRIES.get(entry, ("", entry))[1]))
 
         for eq in self.equations.values():
             for letter, qname in sorted(eq.reads.items()):
@@ -1038,11 +1092,11 @@ def selftest() -> list[str]:
         passed.append(name)
 
     names = list(lib.equations)
-    ok("equation names are unique", len(names) == len(set(names)) == len(EQUATIONS_DATA))
-    unknown = sorted({q for r in READINGS_DATA.values() for q in r.values()} - set(lib.quantities) - {"pi"})
+    ok("equation names are unique", len(names) == len(set(names)) == len(EQUATIONS_DATA) + len(EXTRA_EQUATIONS))
+    unknown = sorted({q for r in (*READINGS_DATA.values(), *EXTRA_READINGS.values()) for q in r.values()} - set(lib.quantities) - {"pi"})
     ok("every reading names a known quantity", not unknown, str(unknown[:5]))
-    ok("every reading belongs to an equation", set(READINGS_DATA) <= set(names),
-       str(sorted(set(READINGS_DATA) - set(names))[:5]))
+    ok("every reading belongs to an equation", set(READINGS_DATA) | set(EXTRA_READINGS) <= set(names),
+       str(sorted((set(READINGS_DATA) | set(EXTRA_READINGS)) - set(names))[:5]))
     ok("every link joins two equations in the library",
        all(a in lib.equations and b in lib.equations for a, _k, b, _n in lib.links))
     bad_dim = [q.name for q in lib.quantities.values() if _try_dim(q.dimension) is None]
@@ -1058,6 +1112,88 @@ def _try_dim(spec: str):
     except Exception:
         return None
 
+
+
+# --------------------------------------------------------------------------------------
+# additions of this fork (not in RosettaMath): results of SPECTRE_CHAIR44.md,
+# SPECTRE_CLOCK_AND_CHAIR44.md and the entries they discuss. They use the same tables and
+# are subject to the same rules (readings, dimensions, collisions).
+# --------------------------------------------------------------------------------------
+_FORK = "brentharts/openai_math_yang_mills: "
+EXTRA_QUANTITIES = [
+    ("contact count", "1", "The number of face contacts between chairs in a finite patch of a substitution tiling.", "Aperiodic_tiling"),
+    ("hierarchy level", "1", "How many times a tile has been refined: a level-n patch has 8^n chairs in the Chair44 hierarchy.", "Substitution_tiling"),
+    ("contact defect", "1", "The failure of the contact count to be extensive: the count at the next level minus eight times the count at this one.", "Aperiodic_tiling"),
+    ("boundary face count", "1", "The number of unit faces on the boundary of a supertile.", "Aperiodic_tiling"),
+    ("spectre area inflation factor", "1", "The area scale factor of the Spectre substitution, 4 + sqrt 15, as it enters the window dimension. Kept apart from the hat's factor on purpose.", "Einstein_problem"),
+    ("chair inflation factor", "1", "The linear scale factor of the Chair44 substitution. Not the area factor of the Spectre.", "Substitution_tiling"),
+    ("window dimension", "1", "The box dimension of the window of a cut-and-project description of a tiling.", "Fractal_dimension"),
+    ("doubling defect", "1", "The extensivity defect of the log partition function when both sides of a rectangle are doubled.", "Transfer-matrix_method"),
+    ("tree branching number", "1", "The mean number of children in a tree on which a noisy signal is broadcast.", "Galton%E2%80%93Watson_process"),
+    ("channel eigenvalue", "1", "The second eigenvalue of the symmetric noise channel; 1 is no noise.", "Stochastic_matrix"),
+    ("within-community degree", "1", "The mean number of neighbours a vertex has in its own community (a of the block model).", "Stochastic_block_model"),
+    ("between-community degree", "1", "The mean number of neighbours a vertex has in another community (b of the block model).", "Stochastic_block_model"),
+]
+EXTRA_EQUATIONS = [
+    ("Chair44 contact count", "Tilings", r"C = \frac{29}{8} \cdot 8^{n} - 3 \cdot 4^{n} - 1",
+     _FORK + "SPECTRE_CLOCK_AND_CHAIR44.md section 2 [computed]", "Aperiodic_tiling",
+     "Face contacts in the level-n patch of the one-seed Chair44 hierarchy: a volume term, a boundary term "
+     "scaling with the area of the supertile, and the corner."),
+    ("Chair44 contact defect", "Tilings", r"d = 12 \cdot 4^{n} + 7",
+     _FORK + "SPECTRE_CLOCK_AND_CHAIR44.md section 2 [computed]", "Aperiodic_tiling",
+     "The exact extensivity defect of the contact count, C(n+1) - 8 C(n); relative to the count it decays like 2^-n."),
+    ("Chair44 boundary faces", "Tilings", r"B = 24 \cdot 4^{n}",
+     _FORK + "SPECTRE_CHAIR44.md section 4, quoting [HR] section 7.2", "Aperiodic_tiling",
+     "The boundary of a Chair44 supertile has 24 4^n unit faces, so its boundary dimension is 2, one less than the "
+     "ambient dimension, with no fractal excess."),
+    ("Chair44 inflation", "Tilings", r"\mu_{C} = 2",
+     _FORK + "SPECTRE_CHAIR44.md section 4, quoting [T] section 3.1", "Substitution_tiling",
+     "The Chair44 substitution scales lengths by 2, the matrix 2 I, determinant 8, with no twist."),
+    ("Spectre window dimension", "Tilings", r"D = \frac{\log(5 + 2 \sqrt{6})}{\log \mu}",
+     _FORK + "SPECTRE_CHAIR44.md section 4, quoting [HR] Theorem 3 section 6", "Fractal_dimension",
+     "The window of the Spectre's internal space has dimension log(5 + 2 sqrt 6) / log(4 + sqrt 15), about 1.111."),
+    ("Doubling defect", "Lattice spin models", r"\Delta = 4 \log Z_{1} - \log Z_{2}",
+     _FORK + "SPECTRE_CLOCK_AND_CHAIR44.md section 2, from [O3] (8.5), (8.7)", "Transfer-matrix_method",
+     "The extensivity defect of the log partition function when both sides are doubled: Z_1 = Z(n, w), Z_2 = Z(2n, 2w)."),
+    ("Doubling defect recursion", "Lattice spin models", r"\Delta_{k+1} \le 64 \Delta_{k}^{2}",
+     _FORK + "SPECTRE_CLOCK_AND_CHAIR44.md section 2, from [O3] Proposition 8.3", "Transfer-matrix_method",
+     "A quadratic recursion: the defect is squared, up to a constant, at each doubling, so it decays doubly exponentially."),
+    ("Reconstruction threshold", "Probability", r"d \lambda^{2} = 1",
+     _FORK + "SPECTRE_CLOCK_AND_CHAIR44.md section 4, from [E229] Theorem 1.1", "Galton%E2%80%93Watson_process",
+     "For the symmetric three-state channel on a tree, the root is reconstructible from the leaves exactly when "
+     "d lambda^2 > 1, and not at equality (the Kesten-Stigum line)."),
+    ("Community detection threshold", "Probability", r"\frac{(a - b)^{2}}{3 (a + 2 b)} = 1",
+     _FORK + "SPECTRE_CLOCK_AND_CHAIR44.md section 4, from [E229] abstract", "Stochastic_block_model",
+     "The same line written for a three-community block model: detection is possible when (a - b)^2 > 3 (a + 2 b)."),
+]
+EXTRA_READINGS = {
+    "Chair44 contact count": {"C": "contact count", "n": "hierarchy level"},
+    "Chair44 contact defect": {"d": "contact defect", "n": "hierarchy level"},
+    "Chair44 boundary faces": {"B": "boundary face count", "n": "hierarchy level"},
+    "Chair44 inflation": {"mu_C": "chair inflation factor"},
+    "Spectre window dimension": {"D": "window dimension", "mu": "spectre area inflation factor"},
+    "Doubling defect": {"Delta": "doubling defect", "Z_1": "partition function", "Z_2": "partition function"},
+    "Doubling defect recursion": {"Delta_k": "doubling defect"},
+    "Reconstruction threshold": {"d": "tree branching number", "lambda": "channel eigenvalue"},
+    "Community detection threshold": {"a": "within-community degree", "b": "between-community degree"},
+}
+EXTRA_LINKS = [
+    ("Community detection threshold", "SPECIALISES", "Reconstruction threshold",
+     "with d = (a + 2b)/3 and lambda = (a - b)/(a + 2b), d lambda^2 = (a - b)^2 / (3 (a + 2b))"),
+    ("Doubling defect", "DEFINES", "Doubling defect recursion", "the recursion bounds this quantity"),
+    ("Chair44 contact count", "FIELD", "Doubling defect",
+     "both are exact extensivity defects under doubling, at completely different rates"),
+    ("Chair44 contact defect", "DEFINES", "Chair44 contact count", "the defect is what the count's boundary term leaves"),
+    ("Spectre inflation factor", "FIELD", "Chair44 inflation", "two substitution tilings, with an area factor and a length factor"),
+    ("Spectre inflation factor", "FIELD", "Spectre window dimension", "the window dimension is a ratio of logarithms with the inflation factor in the denominator"),
+]
+EXTRA_ENTRY = {   # CONTENTS entry (or pseudo-entry) of an addition
+    "Chair44 contact count": "spectre-chair44", "Chair44 contact defect": "spectre-chair44",
+    "Chair44 boundary faces": "spectre-chair44", "Chair44 inflation": "spectre-chair44",
+    "Spectre window dimension": "spectre-chair44",
+    "Doubling defect": "215", "Doubling defect recursion": "215",
+    "Reconstruction threshold": "229", "Community detection threshold": "229",
+}
 
 # --------------------------------------------------------------------------------------
 # the data, copied from RosettaMath's rosettaphys.py (MIT licence, Brent Hartshorn)

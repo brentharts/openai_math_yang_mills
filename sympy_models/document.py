@@ -91,13 +91,16 @@ def entry_titles(contents_path: Path) -> dict[str, tuple[str, str]]:
 
 
 def _entry_sort_key(entry: str):
-    return (entry == NO_ENTRY, int(entry) if entry.isdigit() else 0)
+    """CONTENTS entries by number, then companion-note pseudo-entries, then equations with no entry."""
+    return (entry == NO_ENTRY, 0 if entry.isdigit() else 1, int(entry) if entry.isdigit() else 0, entry)
 
 
 def group_by_entry(eqs) -> "OrderedDict[str, list]":
     groups: dict[str, list] = {}
     for e in eqs:
         groups.setdefault(e.entry or NO_ENTRY, []).append(e)
+    for items in groups.values():      # transcriptions of the papers first, knowledge-base cross-checks after
+        items.sort(key=lambda e: e.source_kind == "knowledge-base")
     return OrderedDict(sorted(groups.items(), key=lambda kv: _entry_sort_key(kv[0])))
 
 
@@ -118,8 +121,13 @@ def render_summary(groups, titles) -> str:
     for entry, eqs in groups.items():
         kinds = Counter(e.source_kind for e in eqs)
         n_checks = sum(len(e.verified) for e in eqs)
-        title = titles.get(entry, (f"Entry {entry}",) * 2)[0] if entry != NO_ENTRY else NO_ENTRY_TITLE
-        label = r"\textendash" if entry == NO_ENTRY else f"\\hyperref[sec:entry-{entry}]{{{entry}}}"
+        if entry in kb.PSEUDO_ENTRIES:
+            short, long_title = kb.PSEUDO_ENTRIES[entry]
+            title, shown = esc(long_title), short
+        else:
+            title = titles.get(entry, (f"Entry {entry}",) * 2)[0] if entry != NO_ENTRY else NO_ENTRY_TITLE
+            shown = entry
+        label = r"\textendash" if entry == NO_ENTRY else f"\\hyperref[sec:entry-{entry}]{{{shown}}}"
         lines.append(
             f"{label} & {title} & {len(eqs)} & {kinds['paper']} & {kinds['repo-doc']} & "
             f"{kinds['textbook']} & {kinds['derived']} & {kinds['knowledge-base']} & {n_checks} \\\\"
@@ -146,6 +154,9 @@ def render_body(groups, titles) -> str:
         if entry == NO_ENTRY:
             heading = esc(NO_ENTRY_TITLE)
             sec_label = "sec:entry-none"
+        elif entry in kb.PSEUDO_ENTRIES:
+            heading = esc(kb.PSEUDO_ENTRIES[entry][1])
+            sec_label = f"sec:entry-{entry}"
         else:
             tex_t, plain_t = titles.get(entry, ("", ""))
             if not tex_t:
