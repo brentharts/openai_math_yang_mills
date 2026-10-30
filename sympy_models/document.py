@@ -25,7 +25,10 @@ KIND_LABEL = {
     "repo-doc": "repo-doc",
     "textbook": "textbook",
     "derived": "derived",
+    "knowledge-base": "knowledge-base",
 }
+KIND_COLUMNS = (("paper", "paper"), ("repo-doc", "repo-doc"), ("textbook", "textbook"),
+                ("derived", "derived"), ("knowledge-base", "kb"))
 
 _SPECIAL = {
     "\\": r"\textbackslash{}",
@@ -105,9 +108,9 @@ def render_summary(groups, titles) -> str:
     lines = [
         r"\begin{table}[h]",
         r"\centering\small",
-        r"\begin{tabular}{@{}rp{0.42\linewidth}rrrrrr@{}}",
+        r"\begin{tabular}{@{}rp{0.36\linewidth}rrrrrrr@{}}",
         r"\toprule",
-        r"Entry & Result & Eq. & paper & repo-doc & textbook & derived & Checks \\",
+        r"Entry & Result & Eq. & paper & repo-doc & textbook & derived & kb & Checks \\",
         r"\midrule",
     ]
     totals = Counter()
@@ -118,7 +121,7 @@ def render_summary(groups, titles) -> str:
         label = r"\textendash" if entry == NO_ENTRY else entry
         lines.append(
             f"{label} & {title} & {len(eqs)} & {kinds['paper']} & {kinds['repo-doc']} & "
-            f"{kinds['textbook']} & {kinds['derived']} & {n_checks} \\\\"
+            f"{kinds['textbook']} & {kinds['derived']} & {kinds['knowledge-base']} & {n_checks} \\\\"
         )
         totals["eq"] += len(eqs)
         totals["checks"] += n_checks
@@ -127,7 +130,7 @@ def render_summary(groups, titles) -> str:
     lines += [
         r"\midrule",
         f" & Total & {totals['eq']} & {totals['paper']} & {totals['repo-doc']} & "
-        f"{totals['textbook']} & {totals['derived']} & {totals['checks']} \\\\",
+        f"{totals['textbook']} & {totals['derived']} & {totals['knowledge-base']} & {totals['checks']} \\\\",
         r"\bottomrule",
         r"\end{tabular}",
         r"\caption{Registered equations and passed checks, by CONTENTS entry and source kind.}",
@@ -188,4 +191,5 @@ def write(eqs, out_dir: Path, contents_path: Path) -> list[Path]:
     body = out_dir / "equations_by_entry.tex"
     summary.write_text(render_summary(groups, titles), encoding="utf-8")
     body.write_text(render_body(groups, titles), encoding="utf-8")
-    return [summary, body]
+    import kbdoc            # imported here: kbdoc imports esc() from this module
+    return [summary, body, kbdoc.write(out_dir)]

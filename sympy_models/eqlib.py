@@ -18,7 +18,7 @@ import sympy as sp
 
 # Source kinds. Keep the provenance honest: the repo's papers, the fork's own
 # markdown notes, and textbook facts are different levels of evidence.
-SOURCE_KINDS = ("paper", "repo-doc", "textbook", "derived")
+SOURCE_KINDS = ("paper", "repo-doc", "textbook", "derived", "knowledge-base")
 BR = "%%BR%%"  # optional line-break marker inside latex_str
 
 
