@@ -15,7 +15,7 @@ STAMP_FILES := $(addprefix $(STAMPS)/,$(addsuffix .stamp,$(SCRIPTS)))
 COMMON      := tools/common.py
 
 .DEFAULT_GOAL := all
-.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures clean
+.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics clean
 
 all: pdf
 
@@ -27,6 +27,7 @@ help:
 	@echo "make full       longer Monte Carlo runs and one more ring size (several minutes)"
 	@echo "make bloch | on | kt | haldane | chair44    run a single model"
 	@echo "make figures     regenerate the committed figures/*.png used by SPECTRE_CLOCK_AND_CHAIR44.md (about 90 s)"
+	@echo "make combinatorics  exact checks and figures for COMBINATORICS_REPRESENTATIONS.md (about 1 min; needs networkx)"
 	@echo "make clean      remove $(BUILD)/"
 	@echo "Variables: PY=python3  FULL=1"
 
@@ -51,6 +52,10 @@ chair44: $(STAMPS)/chair44_model.stamp
 # Figures for the markdown page SPECTRE_CLOCK_AND_CHAIR44.md; written to figures/ (committed), not part of the PDF.
 figures:
 	$(PY) tools/hierarchy_figures.py $(ARGS)
+
+# Exact checks and figures for COMBINATORICS_REPRESENTATIONS.md; writes figures/comb_*.png, not part of the PDF.
+combinatorics:
+	$(PY) tools/combinatorics_checks.py all --figures --nmax=22
 
 # --- summary and PDF --------------------------------------------------------------------------
 $(BUILD)/tex/summary.tex: tools/make_summary.py $(STAMP_FILES)
