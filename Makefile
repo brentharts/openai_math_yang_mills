@@ -15,7 +15,7 @@ STAMP_FILES := $(addprefix $(STAMPS)/,$(addsuffix .stamp,$(SCRIPTS)))
 COMMON      := tools/common.py
 
 .DEFAULT_GOAL := all
-.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta clean
+.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta sympy sympy-pdf clean
 
 all: pdf
 
@@ -26,6 +26,8 @@ help:
 	@echo "make pdf        build the PDF (runs any models that are out of date)"
 	@echo "make full       longer Monte Carlo runs and one more ring size (several minutes)"
 	@echo "make bloch | on | kt | haldane | chair44    run a single model"
+	@echo "make sympy      run the sympy models in sympy_models/ and export their equations (build in sympy_models/build/)"
+	@echo "make sympy-pdf  also build sympy_models/build/equations_document.pdf, grouped by CONTENTS entry"
 	@echo "make figures     regenerate the committed figures/*.png used by SPECTRE_CLOCK_AND_CHAIR44.md (about 90 s)"
 	@echo "make combinatorics  exact checks and figures for COMBINATORICS_REPRESENTATIONS.md (about 1 min; needs networkx)"
 	@echo "make zeta           zero-counting check and strip figures for ZETA_ZEROS.md (about 30 s; needs mpmath)"
@@ -62,6 +64,13 @@ combinatorics:
 zeta:
 	$(PY) tools/zeta_strip_figure.py --nzeros=200 --figures
 
+# sympy models: equations checked symbolically and exported as LaTeX (see sympy_models/README.md).
+sympy:
+	$(PY) sympy_models/export.py
+
+sympy-pdf:
+	$(PY) sympy_models/export.py --pdf
+
 # --- summary and PDF --------------------------------------------------------------------------
 $(BUILD)/tex/summary.tex: tools/make_summary.py $(STAMP_FILES)
 	$(PY) tools/make_summary.py
@@ -83,5 +92,6 @@ full:
 	$(MAKE) -B FULL=1 pdf
 
 clean:
-	rm -rf $(BUILD)
+	rm -rf $(BUILD) sympy_models/build
+	find sympy_models -name __pycache__ -type d -prune -exec rm -rf {} +
 	find tools -name __pycache__ -type d -prune -exec rm -rf {} +
