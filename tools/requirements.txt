@@ -7,3 +7,5 @@ matplotlib
 numba
 # Needed only by tools/combinatorics_checks.py (make combinatorics):
 networkx
+# Needed by tools/zeta_strip_figure.py (make zeta); installed with sympy:
+mpmath
