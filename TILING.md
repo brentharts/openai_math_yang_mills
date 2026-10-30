@@ -8,6 +8,8 @@ Entry numbers are those of CONTENTS.md. "Lean" links go to the formalization sco
 
 ## The one tiling paper
 
+A dedicated page, [PERIODIC_TILING.md](PERIODIC_TILING.md), walks through this paper's proof and its Lean tree in detail. It also lists outside reading: the Greenfeld–Tao [announcement](https://arxiv.org/abs/2209.08451), [Tao's blog post](https://terrytao.wordpress.com/2022/11/29/a-counterexample-to-the-periodic-tiling-conjecture-2/) and an [IAS colloquium](https://www.ias.edu/video/einstein-p-adic-sudoku-domino-and-decidability) on the same problem.
+
 | Entry | Result | Status |
 |---|---|---|
 | **155** | [A translational tile with no fully periodic tiling in dimension three](preprints/A-translational-tile-with-no-fully-periodic-tiling-in-dimension-three-September-23-2026/) ([Lean](lean/docs/155.md), [statement](lean/ComparatorChallenges/PeriodicTilingThree.lean)) | read |
@@ -111,6 +113,7 @@ A search of summaries and titles found no papers on Wang tiles, Penrose or other
 
 ## Related pages
 
+- [PERIODIC_TILING.md](PERIODIC_TILING.md) for entry 155 in depth.
 - [COMPLEXITY.md](COMPLEXITY.md) and [ETH.md](ETH.md) for the algorithmic side of perfect matchings.
 - [PHYSICS.md](PHYSICS.md) for the lattice-model and height-function papers.
 
