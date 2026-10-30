@@ -68,6 +68,13 @@ def build_and_verify():
               "fugacity, l the logarithm of the length scale. It is the paper's eq. (1.6) "
               "(X' = -Y^2, Y' = -XY) with X, Y, w renamed x, y, l.",
     ))
+    eq_kt.cites = ["rosettamath", "oai-xy-essential"]
+    eq_kt.see = [(kb.kb_label("Kosterlitz coupling flow"), "Kosterlitz coupling flow",
+                  kb.wikipedia_url(kb.equation("Kosterlitz coupling flow").slug)),
+                 (kb.kb_label("Kosterlitz fugacity flow"), "Kosterlitz fugacity flow",
+                  kb.wikipedia_url(kb.equation("Kosterlitz fugacity flow").slug)),
+                 ("eq:kt_limiting_flow", "the paper's limiting flow and its solution", None),
+                 ("eq:kt_recursion", "the paper's recursion", None)]
     Xs, Ys = k_ * sp.cot(k_ * W_), k_ * sp.csc(k_ * W_)
     sub = {x: Xs, y: Ys}
     check(NAME, "the paper's solution X = k cot kw solves dx/dl = -y^2 of the knowledge base",
@@ -95,6 +102,11 @@ def build_and_verify():
         notes="Leading asymptotic-freedom form only; C is the non-universal constant in front. "
               "m is the lattice mass, beta the spin inverse temperature, ell the linear blocking factor.",
     ))
+    eq_af.cites = ["rosettamath", "oai-o4-mass", "oai-o3-limit"]
+    eq_af.see = [(kb.kb_label(n), n, kb.wikipedia_url(kb.equation(n).slug)) for n in
+                 ("Asymptotic-freedom mass scaling", "Spin-model transmutation slope", "Spin block coupling")] + [
+                 ("eq:on_mass_af", "the leading form of the O(N) mass in entry 215", None),
+                 ("eq:on_log_slope", "its logarithmic slope", None)]
     m_sym, C_sym = sp.Symbol("m"), sp.Symbol("C")
     mass_rhs = mass_kb.rhs.xreplace({s: sp.Symbol(s.name, positive=True) for s in mass_kb.rhs.free_symbols})
     check(NAME, "the knowledge-base mass law equals this repository's on_mass_af up to the constant C",
@@ -124,6 +136,10 @@ def build_and_verify():
         latex_str=r"\epsilon(k)=2\sum_{a=1}^{3}\bigl(1-\cos k_a\bigr)",
         notes="Simple cubic lattice, in units of the exchange; the sum runs over the three axes.",
     ))
+    eq_disp.cites = ["rosettamath", "oai-bloch", "oai-bloch-correction"]
+    eq_disp.see = [(kb.kb_label("Magnon dispersion"), "Magnon dispersion",
+                    kb.wikipedia_url(kb.equation("Magnon dispersion").slug)),
+                   ("eq:bloch_dispersion", "the dispersion of the manuscripts", None)]
     quad = sum(sp.series(eps, kk, 0, 4).removeO().subs({o: 0 for o in (k1, k2, k3) if o != kk}) for kk in (k1, k2, k3))
     check(NAME, "the dispersion is |k|^2 + O(k^4) near 0 (the quadratic part Bloch's T^{3/2} law rests on)",
           sp.simplify(sp.expand(quad - 2 * (k1**2 + k2**2 + k3**2) / 2)) == 0, eq=eq_disp)
@@ -144,6 +160,10 @@ def build_and_verify():
               "lattice-correction paper), supplied by bloch_law.py; the knowledge base states the "
               "form and leaves A_0, A_1 as unnamed coefficients.",
     ))
+    eq_bloch.cites = ["rosettamath", "oai-bloch", "oai-bloch-correction"]
+    eq_bloch.see = [(kb.kb_label("Bloch magnon density"), "Bloch magnon density",
+                     kb.wikipedia_url(kb.equation("Bloch magnon density").slug)),
+                    ("eq:bloch_correction_corollary", "Corollary 1.2, the first lattice correction", None)]
     sub_a = {A0: sp.zeta(sp.Rational(3, 2)) / (8 * sp.pi ** sp.Rational(3, 2)),
              A1: 3 * sp.zeta(sp.Rational(5, 2)) / (128 * sp.pi ** sp.Rational(3, 2))}
     sym_x = sp.Symbol("x", positive=True)
