@@ -3,7 +3,8 @@
 % This wrapper is hand-editable. It pulls in two generated fragments from build/:
 %     equations_summary.tex     summary table per entry
 %     equations_by_entry.tex    one section per CONTENTS entry
-%     knowledge_graph.tex       the knowledge graph: census, collisions, families, readings appendix
+%     knowledge_graph.tex       the knowledge graph: census, collisions, families, appendices
+%     bibliography.tex          the references cited above
 % Regenerate them, and build this file, with:
 %     python3 sympy_models/export.py --pdf
 % or by hand, from sympy_models/:
@@ -16,7 +17,15 @@
 \usepackage[margin=0.9in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs,longtable}
-\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=green!40!black,urlcolor=blue!60!black]{hyperref}
+\usepackage{orcidlink}
+\hypersetup{pdfauthor={Brent Hartshorn and Tristan Romanov},
+  pdftitle={Equations from the OpenAI math release, modelled and checked in sympy}}
+% let long URLs break anywhere sensible in the bibliography
+\urlstyle{same}
+\makeatletter\def\UrlBreaks{\do\/\do\-\do\.\do\_}\makeatother
+\Urlmuskip=0mu plus 2mu
 
 \allowdisplaybreaks
 \setcounter{tocdepth}{2}
@@ -26,7 +35,8 @@
 \checkstrue
 
 \title{Equations from the OpenAI math release,\\ modelled and checked in sympy}
-\author{\texttt{sympy\_models/} in the fork of \texttt{openai\_math\_yang\_mills}}
+\author{Brent Hartshorn \orcidlink{0009-0004-2853-655X}
+        and Tristan Romanov}
 \date{}
 
 \begin{document}
@@ -66,5 +76,7 @@ computation attached. Notes under an equation state what it does not say.
 \input{build/equations_by_entry.tex}
 
 \input{build/knowledge_graph.tex}
+
+\input{build/bibliography.tex}
 
 \end{document}

@@ -34,6 +34,8 @@ class Equation:
     model: str = ""                   # filled in by register()
     notes: str = ""                   # caveats: what the equation does not say
     verified: list[str] = field(default_factory=list)  # names of passed checks
+    cites: list[str] = field(default_factory=list)     # extra bibliography keys (see knowledgebase.references)
+    see: list[tuple] = field(default_factory=list)     # (label or None, text, url or None): related objects
 
     def __post_init__(self):
         if self.expr is None and self.latex_str is None:
@@ -59,6 +61,8 @@ class Equation:
             "model": self.model,
             "notes": self.notes,
             "verified": self.verified,
+            "cites": self.cites,
+            "see": [list(t) for t in self.see],
         }
 
 

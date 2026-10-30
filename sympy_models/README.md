@@ -21,7 +21,7 @@ Output in `sympy_models/build/` (regenerate it, do not edit it):
 | `equations.tex` | One numbered `equation` per registered equation, labelled `eq:<key>`, with its source as a LaTeX comment. Use `\input{equations.tex}`. |
 | `equations.json` | Key, title, LaTeX, source kind, source, caveats, model and the checks each equation passed. |
 | `equations.md` | A short index table with CONTENTS entry numbers. |
-| `equations_summary.tex`, `equations_by_entry.tex` | Generated fragments for the document below: a summary table and one section per CONTENTS entry. |
+| `equations_summary.tex`, `equations_by_entry.tex`, `knowledge_graph.tex`, `bibliography.tex` | Generated fragments for the document below: a summary table, one section per CONTENTS entry, the knowledge-graph part with its appendices, and the references. |
 | `equations_document.pdf` | The built document (only with `--pdf`). |
 
 ## The equations document
@@ -52,6 +52,8 @@ kb.selftest()                                # structural checks of the tables
 ```
 
 [models/knowledge.py](models/knowledge.py) uses it in three ways: the selftest; three cross-checks of knowledge-base entries against this repository's models (the Kosterlitz flow against the explicit solution k cot kw, k csc kw of entry 216; the asymptotic-freedom mass law, transmutation slope and blocking of entry 215; the magnon dispersion and Bloch density of entry 271); and the registration, as `derived` equations, of the joins on the pivots in `REGISTERED_PIVOTS` (statistical mechanics, lattice scaling, running couplings). The library yields more joins than are registered; the rest are counted in the document. [kbdoc.py](kbdoc.py) writes `build/knowledge_graph.tex`, the last part of the document: graph census, readings, dimension report, joins by pivot, collisions, families and an appendix of the readable equations. Every number there is computed when the document is built.
+
+**References and links.** The graph also holds reference nodes (the manuscripts of entries 155, 215, 216, 268 and 271, read from the `README.md` of each preprint directory, plus the repositories RosettaMath cites and RosettaMath itself) and one Wikipedia node per article (`slug` of an equation or quantity). Edges `sourced-from`, `treats` and `explained-by` tie equations, entries and quantities to them. In the document, a `paper` equation cites the manuscripts its source string tags (`[Log]`, `[Ess]`, `[B]`, ...), each entry section lists its manuscripts, every equation of the library and every quantity is a labelled row (`K12`, `Q66`, `\label{kbeq:...}`, `\label{kbq:...}`) in the appendices, and bridges and joins link back to those rows and to the paper equations they cross-check with `\ref`/`\eqref`, with names as Wikipedia `\href`s. `build/bibliography.tex` holds the cited references. To cite a new manuscript, add it to `MANUSCRIPTS` in `knowledgebase.py` with the tag used in the model's source strings.
 
 A join is the statement that two quoted equations imply a third by transitivity, with the same letter read the same way taken to be the same variable. Some joins state only a condition (m c^2 = 1/2 m v^2 on energy); that is why registration is by an explicit list of pivots. The checks test the algebra and the dimensions, not whether RosettaMath's entries quote their sources correctly beyond the three cross-checks above.
 

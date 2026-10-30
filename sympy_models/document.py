@@ -17,6 +17,7 @@ from collections import Counter, OrderedDict
 from pathlib import Path
 
 import eqlib
+import knowledgebase as kb
 
 NO_ENTRY = "-"
 NO_ENTRY_TITLE = "Background and comparison (no repository entry)"
@@ -118,7 +119,7 @@ def render_summary(groups, titles) -> str:
         kinds = Counter(e.source_kind for e in eqs)
         n_checks = sum(len(e.verified) for e in eqs)
         title = titles.get(entry, (f"Entry {entry}",) * 2)[0] if entry != NO_ENTRY else NO_ENTRY_TITLE
-        label = r"\textendash" if entry == NO_ENTRY else entry
+        label = r"\textendash" if entry == NO_ENTRY else f"\\hyperref[sec:entry-{entry}]{{{entry}}}"
         lines.append(
             f"{label} & {title} & {len(eqs)} & {kinds['paper']} & {kinds['repo-doc']} & "
             f"{kinds['textbook']} & {kinds['derived']} & {kinds['knowledge-base']} & {n_checks} \\\\"
@@ -155,9 +156,29 @@ def render_body(groups, titles) -> str:
                 heading = f"Entry {entry}: \\texorpdfstring{{{tex_t}}}{{{plain_t}}}"
             sec_label = f"sec:entry-{entry}"
         out.append(f"\\section{{{heading}}}\\label{{{sec_label}}}\n")
+        papers = kb.manuscripts_for(entry) if entry != NO_ENTRY else []
+        if papers:
+            items = "; ".join(f"[{esc(r.tag)}]~\\emph{{{esc(r.title)}}}{cite([r.key])}" for r in papers)
+            out.append(f"\\noindent\\small\\textit{{Manuscripts.}} {items}.\\normalsize\n")
         for eq in eqs:
             out.append(render_equation(eq))
     return "\n".join(out)
+
+
+def render_see(items) -> str:
+    """Related objects as links: 'text (ref)', with the text a Wikipedia link when there is a URL."""
+    out = []
+    for label, text, url in items:
+        shown = f"\\href{{{url}}}{{{esc(text)}}}" if url else esc(text)
+        if label:
+            ref = f"\\eqref{{{label}}}" if label.startswith("eq:") else f"\\ref{{{label}}}"
+            shown += f"~({ref})"
+        out.append(shown)
+    return ", ".join(out)
+
+
+def cite(keys) -> str:
+    return f"~\\cite{{{','.join(keys)}}}" if keys else ""
 
 
 def render_equation(eq) -> str:
@@ -165,11 +186,13 @@ def render_equation(eq) -> str:
         f"% ---- {eq.key} ({eq.model}) ----",
         f"\\subsection{{{esc(eq.title)}}}",
         (f"\\noindent{{\\small\\textsc{{{esc(KIND_LABEL[eq.source_kind])}}}"
-         f"\\quad {esc(eq.source)}\\quad[\\texttt{{{esc(eq.model)}}}]}}"),
+         f"\\quad {esc(eq.source)}{cite(kb.citations_for(eq))}\\quad[\\texttt{{{esc(eq.model)}}}]}}"),
         f"\\begin{{equation}}\\label{{eq:{eq.key}}}\n  {eq.latex(multiline=True)}\n\\end{{equation}}",
     ]
     if eq.notes.strip():
         parts.append(f"\\begin{{quote}}\\small\\textit{{Note.}} {esc(eq.notes.strip())}\\end{{quote}}")
+    if eq.see:
+        parts.append(f"\\begin{{quote}}\\small\\textit{{See.}} {render_see(eq.see)}.\\end{{quote}}")
     checks = _checks_by_equation(eq)
     if checks:
         items = "\n".join(f"  \\item {esc(c)}" for c in checks)
@@ -192,4 +215,4 @@ def write(eqs, out_dir: Path, contents_path: Path) -> list[Path]:
     summary.write_text(render_summary(groups, titles), encoding="utf-8")
     body.write_text(render_body(groups, titles), encoding="utf-8")
     import kbdoc            # imported here: kbdoc imports esc() from this module
-    return [summary, body, kbdoc.write(out_dir)]
+    return [summary, body, *kbdoc.write(out_dir, eqs)]
