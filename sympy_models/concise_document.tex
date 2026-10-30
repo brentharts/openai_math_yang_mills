@@ -1,0 +1,44 @@
+% Concise companion paper: physics and geometry, with large generated equations and no tables.
+%
+% This wrapper is hand-editable. It pulls in two generated fragments from build/:
+%     concise_body.tex            the figures and selected results, built by concise.py
+%     concise_bibliography.tex    the references cited there
+% Regenerate them, and build this file, with:
+%     python3 sympy_models/export.py --pdf
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=green!40!black,urlcolor=blue!60!black]{hyperref}
+\usepackage{orcidlink}
+\hypersetup{pdfauthor={Brent Hartshorn and Tristan Romanov},
+  pdftitle={The physics and geometry of the OpenAI math release, conjoined}}
+\urlstyle{same}
+\makeatletter\def\UrlBreaks{\do\/\do\-\do\.\do\_}\makeatother
+\Urlmuskip=0mu plus 2mu
+\allowdisplaybreaks
+
+\title{The physics and geometry of the OpenAI math release,\\ conjoined by a knowledge graph}
+\author{Brent Hartshorn \orcidlink{0009-0004-2853-655X}
+        and Tristan Romanov}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Equations that state one quantity are set equal after each is solved for it, and a row of such
+equalities is drawn as a single large display, in the manner of RosettaMath~\cite{rosettamath}.
+The rows are generated from a knowledge graph and checked in sympy: every term, substituted back
+into its source equation, gives an identity, and rows of numbers are checked equal. The companion
+document \texttt{equations\_document} gives the full equations, their sources and their checks.
+This is fork-level material, not an official OpenAI document.
+\end{abstract}
+
+\input{build/concise_body.tex}
+
+\input{build/concise_bibliography.tex}
+\end{document}

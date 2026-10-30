@@ -59,6 +59,25 @@ kb.selftest()                                # structural checks of the tables
 
 A join is the statement that two quoted equations imply a third by transitivity, with the same letter read the same way taken to be the same variable. Some joins state only a condition (m c^2 = 1/2 m v^2 on energy); that is why registration is by an explicit list of pivots. The checks test the algebra and the dimensions, not whether RosettaMath's entries quote their sources correctly beyond the three cross-checks above.
 
+## The concise document
+
+`export.py --pdf` also builds `build/concise_document.pdf` (hand-editable wrapper `concise_document.tex`,
+generated `build/concise_body.tex` and `build/concise_bibliography.tex`): a short paper with no tables,
+about physics and geometry only. `concise.py` generates large displays in the manner of Figures 1 and 2
+of RosettaMath's `rosettapaper.py`: one quantity per row, overbraced, equal to each library equation
+solved for it and underbraced with that equation's name, closed by a side brace with a tally.
+
+- Figure 1 (physics): energy, force, G, k_B, hbar, h and the lattice mass, from `PHYSICS_ROWS`.
+- Figure 2 (geometry): the Spectre and hat inflation factors, checked equal as numbers under the
+  stated values of the other letters, the window dimension and the Chair44 contact count.
+- Figure 3 (transmutation): slopes, coupling and mass, plus correspondence arrows between the O(N)
+  and Yang-Mills exponents; the Yang-Mills exponent 1/(2 b_0 g^2) equals r_g*beta is checked.
+
+Every term is substituted back into its source equation and must give an identity; a failure raises, so
+nothing unverified is written. The pivots are named, not computed, because "every family" does not fit
+a page and the two inflation factors only look alike. Change `PHYSICS_ROWS`, `GEOMETRY_ROWS`,
+`TRANSMUTATION_ROWS` and `SELECTED` in `concise.py` to choose what is shown.
+
 ## Layout
 
 - [eqlib.py](eqlib.py): the `Equation` record, the registry, `check()` and the LaTeX block writer.

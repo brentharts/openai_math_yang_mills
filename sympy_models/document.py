@@ -226,4 +226,5 @@ def write(eqs, out_dir: Path, contents_path: Path) -> list[Path]:
     summary.write_text(render_summary(groups, titles), encoding="utf-8")
     body.write_text(render_body(groups, titles), encoding="utf-8")
     import kbdoc            # imported here: kbdoc imports esc() from this module
-    return [summary, body, *kbdoc.write(out_dir, eqs)]
+    import concise
+    return [summary, body, *kbdoc.write(out_dir, eqs), *concise.write(out_dir, eqs)]

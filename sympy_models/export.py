@@ -12,6 +12,7 @@ Writes, under sympy_models/build/:
     equations.md             quick human-readable index
     equations_summary.tex    summary table per CONTENTS entry   } \\input by the wrapper
     equations_by_entry.tex   one section per CONTENTS entry     } equations_document.tex
+    concise_body.tex, concise_bibliography.tex                    } concise_document.tex (no tables)
 With --pdf, pdflatex is run on equations_document.tex until references settle (the hand-editable wrapper).
 Exit status is nonzero if any check fails, so nothing unverified is exported.
 """
@@ -33,25 +34,26 @@ import models  # noqa: E402
 
 CONTENTS = HERE.parent / "CONTENTS.md"
 WRAPPER = "equations_document.tex"
+CONCISE_WRAPPER = "concise_document.tex"
 
 
-def build_pdf(out: Path) -> Path:
+def build_pdf(out: Path, wrapper: str = WRAPPER) -> Path:
     """Run pdflatex (repeating until cross-references settle) from sympy_models/."""
     if shutil.which("pdflatex") is None:
         sys.exit("pdflatex not found (install TeX Live)")
     cmd = ["pdflatex", "-interaction=nonstopmode", "-halt-on-error",
-           "-output-directory", str(out), WRAPPER]
+           "-output-directory", str(out), wrapper]
     last = ""
     for _ in range(3):  # the table of contents and references usually settle after two runs
         run = subprocess.run(cmd, cwd=HERE, capture_output=True, text=True)
         last = run.stdout
         if run.returncode != 0:
             print(last[-3000:])
-            sys.exit(f"pdflatex failed; see {out / (Path(WRAPPER).stem + '.log')}")
+            sys.exit(f"pdflatex failed; see {out / (Path(wrapper).stem + '.log')}")
         if "Rerun to get" not in last:
             break
     pages = re.search(r"Output written on .*?\((\d+) pages?", last.replace("\n", ""))  # pdflatex wraps long paths
-    pdf = out / (Path(WRAPPER).stem + ".pdf")
+    pdf = out / (Path(wrapper).stem + ".pdf")
     print(f"built {pdf}" + (f" ({pages.group(1)} pages)" if pages else ""))
     return pdf
 
@@ -100,6 +102,7 @@ def main(argv):
         if argv:
             print(f"note: only {', '.join(names)} were run, so the document is partial")
         build_pdf(out)
+        build_pdf(out, CONCISE_WRAPPER)
 
 
 if __name__ == "__main__":
