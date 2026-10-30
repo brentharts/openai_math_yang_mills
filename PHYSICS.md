@@ -95,3 +95,4 @@ A search of the CONTENTS summaries, the Lean documentation, and the preprint tit
 
 - [YANGMILLS.md](YANGMILLS.md) for the Yang-Mills claim and the subset of these results closest to it.
 - [KAKEYA.md](KAKEYA.md) for the harmonic-analysis results, which have uses in PDE and wave propagation.
+- [TILING.md](TILING.md) for the lattice-model, height-function, dimer and packing papers (entries 090, 223, 225, 226, 232, 237) seen from the tiling and matching side.

@@ -69,6 +69,11 @@ The ETH paper's Corollary 1.4 derives a circuit lower bound for E^NP from its al
 - The hardness entries above are stated as NP-hardness results, which per the general background above are not conditional on ETH. I did not read those papers, so a conditional lemma inside one of them cannot be excluded.
 - The new paper's own limits (no general subexponential algorithm for NP, other hypotheses such as the Orthogonal Vectors Conjecture still open) are listed in [ETH.md](ETH.md).
 
+## Related pages
+
+- [ETH.md](ETH.md) for the ETH refutation.
+- [TILING.md](TILING.md) for the perfect-matching results (entries 113, 120, 126) in the context of dimers and tilings.
+
 ## Caveats
 
 - Rows other than 378 and 102 are described from their CONTENTS summaries only.

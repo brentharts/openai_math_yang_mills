@@ -101,6 +101,7 @@ Secondary sources report that Anthropic posted its own refutation, a paper title
 - **[COMPLEXITY.md](COMPLEXITY.md):** the other complexity-theory results in this repository, including entry 102 that this paper cites.
 - **[KAKEYA.md](KAKEYA.md):** the ETH paper cites Björklund, Kaski and Williams for using generalized Kakeya sets (a finite-field notion) to recover polynomial values from structured evaluations. That is a different object from the Euclidean Kakeya sets of the harmonic-analysis result, and the repository claims no link between them.
 - **[PHYSICS.md](PHYSICS.md):** nothing in the repository connects this result to the physics papers. As general background (not from the repository), counting satisfying assignments and counting perfect matchings are partition-function computations for constraint and dimer models, which is the setting of Corollary 1.3.
+- **[TILING.md](TILING.md):** the repository's perfect-matching and dimer papers, including the approximate-counting result (entry 113) next to this paper's exact counting.
 
 ## Caveats
 
