@@ -1,0 +1,5 @@
+sympy
+# mpmath is installed with sympy; models/bloch_law.py uses it for the numerical check.
+# Optional: models/haldane_gap.py runs its exact-diagonalization sanity check only if both are installed.
+numpy
+scipy
