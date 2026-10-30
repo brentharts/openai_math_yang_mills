@@ -10,12 +10,12 @@ STAMPS   := $(BUILD)/stamps
 PDF      := $(BUILD)/physics_models.pdf
 TEMPLATE := tools/templates/physics_models.tex
 
-SCRIPTS     := bloch_law on_model_mc kt_flow haldane_gap
+SCRIPTS     := bloch_law on_model_mc kt_flow haldane_gap chair44_model
 STAMP_FILES := $(addprefix $(STAMPS)/,$(addsuffix .stamp,$(SCRIPTS)))
 COMMON      := tools/common.py
 
 .DEFAULT_GOAL := all
-.PHONY: all help setup models pdf full bloch on kt haldane clean
+.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures clean
 
 all: pdf
 
@@ -25,7 +25,8 @@ help:
 	@echo "make models     run all model scripts (figures, LaTeX fragments, data in $(BUILD)/)"
 	@echo "make pdf        build the PDF (runs any models that are out of date)"
 	@echo "make full       longer Monte Carlo runs and one more ring size (several minutes)"
-	@echo "make bloch | on | kt | haldane    run a single model"
+	@echo "make bloch | on | kt | haldane | chair44    run a single model"
+	@echo "make figures     regenerate the committed figures/*.png used by SPECTRE_CLOCK_AND_CHAIR44.md (about 90 s)"
 	@echo "make clean      remove $(BUILD)/"
 	@echo "Variables: PY=python3  FULL=1"
 
@@ -45,6 +46,11 @@ bloch:   $(STAMPS)/bloch_law.stamp
 on:      $(STAMPS)/on_model_mc.stamp
 kt:      $(STAMPS)/kt_flow.stamp
 haldane: $(STAMPS)/haldane_gap.stamp
+chair44: $(STAMPS)/chair44_model.stamp
+
+# Figures for the markdown page SPECTRE_CLOCK_AND_CHAIR44.md; written to figures/ (committed), not part of the PDF.
+figures:
+	$(PY) tools/hierarchy_figures.py $(ARGS)
 
 # --- summary and PDF --------------------------------------------------------------------------
 $(BUILD)/tex/summary.tex: tools/make_summary.py $(STAMP_FILES)

@@ -130,6 +130,9 @@ Each is mine. None is claimed by a source.
 
 ## Related pages
 
+- [SPECTRE_CLOCK_AND_CHAIR44.md](SPECTRE_CLOCK_AND_CHAIR44.md), the symmetry group, doubling defect and "clock" connections worked out with computations and figures.
+- [CHAIR44_MODEL.md](CHAIR44_MODEL.md), a pose-level model built from the 44-contact atlas, with the checks it passes.
+- [HIERARCHIES.md](HIERARCHIES.md), a scan of the other preprints for links to these tilings and to Yang–Mills.
 - [MONOTILES.md](MONOTILES.md), the shorter comparison this page expands.
 - [PERIODIC_TILING.md](PERIODIC_TILING.md), the proof of entry 155 and its Lean tree.
 - [TILING.md](TILING.md), the wider tiling, dimer and packing context.

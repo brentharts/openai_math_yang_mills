@@ -40,6 +40,14 @@ None of the papers below is about Yang-Mills, and the repository does not link t
 
 A keyword search of the CONTENTS summaries, the Lean documentation and the preprint titles found no papers on lattice gauge theory, Wilson loops, confinement or the area law, and none constructing an interacting four-dimensional quantum field theory. This was a search of summaries and titles, not of every paper's full text. The gap between the two-dimensional sigma-model results above and 4D Yang-Mills is therefore the open part, and the repository gives no indication of how it would be bridged.
 
+## Where Yang–Mills appears in the preprints
+
+A full-text scan of all 751 preprint PDFs (details in [HIERARCHIES.md](HIERARCHIES.md)) finds "Yang–Mills" in 14 papers and **none that treats a gauge theory**. There are no hits for Wilson loops, quarks or gluons.
+- The five 2D O(N) papers (entry 215) all cite Polyakov's 1975 "Interaction of Goldstone particles in two dimensions. Applications to ferromagnets and massive Yang–Mills fields"; the O(3) paper also cites Bałaban's lattice gauge theory work.
+- The two BFSS papers (entry 270) describe the model as the reduction of ten-dimensional supersymmetric Yang–Mills to one time dimension, and one cites Lüscher's 1983 estimates for Yang–Mills Hamiltonians on a torus.
+- The connection-recovery paper (entry 365) cites Cekić's Calderón problem for Yang–Mills connections and "imposes no Yang–Mills equation".
+- Entries 050, 055, 060, 260, 306 and 372 cite classical Yang–Mills references (Donaldson, Uhlenbeck, Demailly, Eskin, Sudarsky–Wald) in other contexts.
+
 ## Companion tooling outside this repository
 
 Two other repositories work on the Yang-Mills side of this question with code. Neither is part of the OpenAI release, and neither claims to prove existence or a mass gap.
@@ -58,6 +66,7 @@ This repository publishes the model's math manuscripts and their Lean formalizat
 ## Related pages
 
 - [KAKEYA.md](KAKEYA.md) for the local smoothing and Kakeya results announced alongside this claim.
+- [HIERARCHIES.md](HIERARCHIES.md) for the block-renormalization parallel between the O(N) papers and aperiodic substitution tilings.
 - [history.md](history.md) for the release log.
 
 ## To do
