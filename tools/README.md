@@ -27,6 +27,8 @@ Output goes to `build/` (ignored by git): `build/figures/` (PDF and PNG), `build
 | [on_model_mc.py](on_model_mc.py) | 215 | Wolff cluster Monte Carlo for the 2D O(3) and O(4) lattice models: susceptibility and second-moment correlation length against β, compared with the asymptotic-freedom form `β^{1/(N-2)} e^{-2πβ/(N-2)}`. Sympy handles the scaling forms and the coupling drift. |
 | [kt_flow.py](kt_flow.py) | 216 | Kosterlitz RG flow for the XY model. Sympy solves it exactly (conserved quantity, closed-form correlation length, `μ ln ξ → π`) and derives the `r^{-1/4} (ln r)^{1/8}` form of the critical correlation function. Scipy checks the closed forms. |
 | [haldane_gap.py](haldane_gap.py) | 268 | Exact diagonalization of periodic spin-1 rings, gap against L, and the gap across the bilinear-biquadratic family. Validated against the exact AKLT energy and known spin-1/2 ring energies. |
+| [chair44_model.py](chair44_model.py) | external | Pose-level constraint model from the 44-contact atlas of the Chair44 tile (Tsiokos, arXiv:2609.19214, transcribed). Checks that the eight child poses fill the doubled chair, that substitution patches up to 512 chairs have no illegal contact, and runs zero-temperature growth. Not a repository entry; see [../CHAIR44_MODEL.md](../CHAIR44_MODEL.md). |
+| [hierarchy_figures.py](hierarchy_figures.py) | external | Exact computations and figures for [../SPECTRE_CLOCK_AND_CHAIR44.md](../SPECTRE_CLOCK_AND_CHAIR44.md): subgroup classes of the cubic rotations, symmetry groups of substitution fixed points, the exact contact-count formula, clock-style recognizability tests and a noisy-patch toy on Chair44. Writes `figures/*.png` (`make figures`), not part of the PDF. |
 
 Support files: [common.py](common.py) (paths, plotting style, LaTeX helpers), [make_summary.py](make_summary.py) (headline-results table), and [templates/physics_models.tex](templates/physics_models.tex) (the report skeleton).
 
@@ -39,7 +41,7 @@ Each section of the PDF states what its model does not test. In particular the M
 ## Running one model
 
 ```sh
-make bloch       # or: on, kt, haldane
+make bloch       # or: on, kt, haldane, chair44
 python3 tools/haldane_gap.py --full
 ```
 

@@ -21,6 +21,7 @@ def main() -> None:
     mc = need("on_model_mc")
     kt = need("kt_flow")
     hal = need("haldane_gap")
+    ch = need("chair44_model")
 
     A = bloch["A"]
     fits = mc["fits"]
@@ -41,6 +42,10 @@ def main() -> None:
         ["268", "Spin-1 Haldane gap",
          "exact diagonalisation; sympy bond algebra",
          rf"$\Delta(12)={L12:.4f}$; fit $\Delta_\infty={hal['aitken']:.4f}$ (literature $\approx0.4105$)"],
+        ["ext.", "Chair44 atlas (external preprint)",
+         "pose-level constraint model; exact checks",
+         rf"substitution patches have $E=0$ up to {ch['levels'][max(ch['levels'])]['chairs']} chairs; "
+         rf"{ch['levels'][max(ch['levels'])]['atlas_used']} of 44 atlas poses realised"],
     ]
     tex = C.table(
         ["entry", "topic", "method", "headline result"], rows, colspec="llp{2.9cm}p{6.2cm}",
