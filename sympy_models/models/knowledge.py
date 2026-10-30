@@ -50,7 +50,10 @@ def build_and_verify():
         check(NAME, f"knowledge base selftest: {item}", True)
     lib = kb.library()
     check(NAME, "the copied library has 155 equations, 150 quantities and 125 readings tables",
-          (len(lib.equations), len(lib.quantities), len(kb.READINGS_DATA)) == (155, 150, 125))
+          (len(kb.EQUATIONS_DATA), len(kb.QUANTITIES_DATA), len(kb.READINGS_DATA)) == (155, 150, 125))
+    check(NAME, "the fork adds its own equations, quantities and readings to the copied tables",
+          (len(lib.equations), len(lib.quantities)) ==
+          (155 + len(kb.EXTRA_EQUATIONS), 150 + len(kb.EXTRA_QUANTITIES)))
 
     # ---- 2a. entry 216: Kosterlitz-Thouless flow ------------------------------------------
     x, y, l = sp.symbols("x y l")
@@ -174,9 +177,111 @@ def build_and_verify():
           all(sp.N(sub_a[a]) > 0 for a in (A0, A1))
           and sp.simplify(sp.diff(paper, xs)).subs(xs, 5).evalf() < 0, eq=eq_bloch)
 
+    # ---- 2d. the Spectre, Chair44, O(3) defect and reconstruction additions -----------------------
+    def see(names, *registered):
+        rows = [(kb.kb_label(n), n, kb.wikipedia_url(kb.equation(n).slug)) for n in names]
+        return rows + [(f"eq:{k}", t, None) for k, t in registered]
+
+    def holds(name, **values):
+        """Does the knowledge-base equation `name` hold for symbol values given as sympy expressions?"""
+        rel = kb.equation(name).relation()
+        sub = {sp.Symbol(k): v for k, v in values.items()}
+        return sp.simplify(sp.expand((rel.lhs - rel.rhs).subs(sub))) == 0
+
+    mu_s = 4 + sp.sqrt(15)
+    eq_sp = register(NAME, Equation(
+        key="kb_spectre_inflation", entry="spectre-chair44",
+        title="Spectre inflation numbers, from the knowledge base",
+        source_kind="knowledge-base",
+        source=_src("Spectre inflation factor", "Spectre inflation quadratic", "Spectre reciprocal pair",
+                    "Spectre linear inflation", "Spectre linear-area relation"),
+        latex_str=(r"\mu=4+\sqrt{15},\quad \mu^{2}=8\mu-1,\quad g\mu=1,\quad g=4-\sqrt{15},%%BR%%"
+                   r"\ell=\frac{\sqrt6+\sqrt{10}}{2},\quad \mu=\ell^{2},\quad \ell^{4}=8\ell^{2}-1"),
+        notes="Drawn from the Spectre's substitution matrix in brentharts/spectre and brentharts/nariai. They "
+              "agree with the numbers [HR] Fact 16 gives for the Spectre; the hat's own factor, (7 + 3 sqrt 5)/2, "
+              "is a different number and is kept under a different quantity on purpose.",
+    ))
+    eq_sp.cites = ["rosettamath", "hartshorn-romanov", "spectre2026", "nariai2026"]
+    eq_sp.see = see(("Spectre inflation factor", "Spectre inflation quadratic", "Spectre reciprocal pair",
+                     "Spectre linear inflation", "Spectre linear-area relation"),
+                    ("spectre_inflation", "the Spectre's inflation in [HR]"))
+    g_s, ell_s = 4 - sp.sqrt(15), (sp.sqrt(6) + sp.sqrt(10)) / 2
+    check(NAME, "'Spectre inflation factor' holds: mu = 4 + sqrt 15", holds("Spectre inflation factor", mu=mu_s), eq=eq_sp)
+    check(NAME, "'Spectre inflation quadratic' holds at mu: mu^2 = 8 mu - 1", holds("Spectre inflation quadratic", mu=mu_s), eq=eq_sp)
+    check(NAME, "'Spectre reciprocal pair' holds with g = 4 - sqrt 15: g mu = 1", holds("Spectre reciprocal pair", g=g_s, mu=mu_s), eq=eq_sp)
+    check(NAME, "'Spectre linear inflation' holds: ell = (sqrt 6 + sqrt 10)/2", holds("Spectre linear inflation", ell=ell_s), eq=eq_sp)
+    check(NAME, "'Spectre linear-area relation' holds: mu = ell^2", holds("Spectre linear-area relation", mu=mu_s, ell=ell_s), eq=eq_sp)
+    check(NAME, "'Spectre linear quartic' holds: ell^4 = 8 ell^2 - 1", holds("Spectre linear quartic", ell=ell_s), eq=eq_sp)
+    check(NAME, "the window dimension of the knowledge base is 1.111 at this mu",
+          abs(sp.N(kb.equation("Spectre window dimension").relation().rhs.subs(sp.Symbol("mu"), mu_s)) - 1.1111) < 1e-3, eq=eq_sp)
+
+    n_ = sp.Symbol("n")
+    C_ = sp.Rational(29, 8) * 8**n_ - 3 * 4**n_ - 1
+    eq_ch = register(NAME, Equation(
+        key="kb_chair44_formulas", entry="spectre-chair44",
+        title="Chair44 counts, from the knowledge base",
+        source_kind="knowledge-base",
+        source=_src("Chair44 contact count", "Chair44 contact defect", "Chair44 boundary faces", "Chair44 inflation"),
+        latex_str=(r"C=\frac{29}{8}\cdot 8^{n}-3\cdot 4^{n}-1,\quad d=12\cdot 4^{n}+7,\quad "
+                   r"B=24\cdot 4^{n},\quad \mu_C=2"),
+        notes="The knowledge-base entries of this fork, written in the graph's own readings (contact count, "
+              "contact defect, boundary face count, chair inflation factor). The check ties each to the sympy "
+              "model, so the LaTeX and the algebra cannot drift apart.",
+    ))
+    eq_ch.cites = ["hartshorn-romanov", "tsiokos-chair44"]
+    eq_ch.see = see(("Chair44 contact count", "Chair44 contact defect", "Chair44 boundary faces", "Chair44 inflation"),
+                    ("chair44_contact_formula", "the contact formula"), ("chair44_boundary_faces", "the boundary of a supertile"),
+                    ("chair44_inflation_matrix", "the inflation matrix"))
+    check(NAME, "'Chair44 contact count' is the contact formula of the model spectre_chair44", holds("Chair44 contact count", C=C_), eq=eq_ch)
+    check(NAME, "'Chair44 contact defect' is C(n+1) - 8 C(n)", holds("Chair44 contact defect", d=C_.subs(n_, n_ + 1) - 8 * C_), eq=eq_ch)
+    check(NAME, "'Chair44 boundary faces' is 24 4^n", holds("Chair44 boundary faces", B=24 * 4**n_), eq=eq_ch)
+    check(NAME, "'Chair44 inflation' is the eigenvalue 2 of the inflation matrix 2 I",
+          holds("Chair44 inflation", mu_C=sp.Integer(2)) and list((2 * sp.eye(3)).eigenvals()) == [2], eq=eq_ch)
+
+    Lf = sp.Function("L", real=True)
+    nn, ww = sp.symbols("n w", positive=True)
+    eq_dd = register(NAME, Equation(
+        key="kb_o3_defect", entry="215",
+        title="Doubling defect and its recursion, from the knowledge base",
+        source_kind="knowledge-base", source=_src("Doubling defect", "Doubling defect recursion"),
+        latex_str=r"\Delta=4\log Z_1-\log Z_2,\qquad \Delta_{k+1}\le 64\,\Delta_k^{2}",
+        notes="Z_1 = Z(n, w) and Z_2 = Z(2n, 2w). The recursion is an inequality, so the knowledge base lists it "
+              "but does not rearrange it.",
+    ))
+    eq_dd.cites = ["oai-o3-limit"]
+    eq_dd.see = see(("Doubling defect", "Doubling defect recursion"), ("o3_doubling_defect", "the paper's definition"),
+                    ("o3_prop_8_3", "Proposition 8.3"))
+    check(NAME, "'Doubling defect' is 2p(n,w) + q(2n,w) of the paper",
+          holds("Doubling defect", Delta=2 * (2 * Lf(nn, ww) - Lf(2 * nn, ww)) + (2 * Lf(2 * nn, ww) - Lf(2 * nn, 2 * ww)),
+                Z_1=sp.exp(Lf(nn, ww)), Z_2=sp.exp(Lf(2 * nn, 2 * ww))), eq=eq_dd)
+    check(NAME, "'Doubling defect recursion' is read as an inequality and is not rearranged",
+          kb.equation("Doubling defect recursion").relation() is None, eq=eq_dd)
+
+    d_, la_, a_, b_ = sp.symbols("d lambda a b")
+    eq_rc = register(NAME, Equation(
+        key="kb_reconstruction", entry="229",
+        title="Reconstruction and community thresholds, from the knowledge base",
+        source_kind="knowledge-base", source=_src("Reconstruction threshold", "Community detection threshold"),
+        latex_str=r"d\lambda^{2}=1,\qquad \frac{(a-b)^{2}}{3(a+2b)}=1",
+        notes="The threshold lines. 'Community detection threshold' specialises 'Reconstruction threshold' in the "
+              "graph, and the check ties the two together.",
+    ))
+    eq_rc.cites = ["oai-e229"]
+    eq_rc.see = see(("Reconstruction threshold", "Community detection threshold"), ("e229_threshold", "Theorem 1.1"),
+                    ("e229_community", "the community corollary"))
+    check(NAME, "'Reconstruction threshold' holds on the line d = 1/lambda^2", holds("Reconstruction threshold", d=1 / la_**2, **{"lambda": la_}), eq=eq_rc)
+    check(NAME, "'Community detection threshold' is 'Reconstruction threshold' under d = (a+2b)/3, lambda = (a-b)/(a+2b)",
+          sp.simplify(kb.equation("Community detection threshold").relation().lhs
+                      - ((a_ + 2 * b_) / 3 * ((a_ - b_) / (a_ + 2 * b_)) ** 2)) == 0, eq=eq_rc)
+
     # tie the cross-checked equations into the graph (the 'models' edges)
     g = kb.graph()
-    for eqobj, names in ((eq_kt, ["Kosterlitz coupling flow", "Kosterlitz fugacity flow"]),
+    for eqobj, names in ((eq_sp, ["Spectre inflation factor", "Spectre inflation quadratic", "Spectre reciprocal pair",
+                                  "Spectre linear inflation", "Spectre linear-area relation", "Spectre linear quartic"]),
+                         (eq_ch, ["Chair44 contact count", "Chair44 contact defect", "Chair44 boundary faces", "Chair44 inflation"]),
+                         (eq_dd, ["Doubling defect", "Doubling defect recursion"]),
+                         (eq_rc, ["Reconstruction threshold", "Community detection threshold"]),
+                         (eq_kt, ["Kosterlitz coupling flow", "Kosterlitz fugacity flow"]),
                          (eq_af, ["Asymptotic-freedom mass scaling", "Spin-model transmutation slope",
                                   "Spin block coupling"]),
                          (eq_disp, ["Magnon dispersion"]), (eq_bloch, ["Bloch magnon density"])):
