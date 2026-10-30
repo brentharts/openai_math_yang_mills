@@ -15,7 +15,7 @@ STAMP_FILES := $(addprefix $(STAMPS)/,$(addsuffix .stamp,$(SCRIPTS)))
 COMMON      := tools/common.py
 
 .DEFAULT_GOAL := all
-.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics clean
+.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta clean
 
 all: pdf
 
@@ -28,6 +28,7 @@ help:
 	@echo "make bloch | on | kt | haldane | chair44    run a single model"
 	@echo "make figures     regenerate the committed figures/*.png used by SPECTRE_CLOCK_AND_CHAIR44.md (about 90 s)"
 	@echo "make combinatorics  exact checks and figures for COMBINATORICS_REPRESENTATIONS.md (about 1 min; needs networkx)"
+	@echo "make zeta           zero-counting check and strip figures for ZETA_ZEROS.md (about 30 s; needs mpmath)"
 	@echo "make clean      remove $(BUILD)/"
 	@echo "Variables: PY=python3  FULL=1"
 
@@ -56,6 +57,10 @@ figures:
 # Exact checks and figures for COMBINATORICS_REPRESENTATIONS.md; writes figures/comb_*.png, not part of the PDF.
 combinatorics:
 	$(PY) tools/combinatorics_checks.py all --figures --nmax=22
+
+# Zero-counting check and figures for ZETA_ZEROS.md; writes figures/zeta_*.png, not part of the PDF.
+zeta:
+	$(PY) tools/zeta_strip_figure.py --nzeros=200 --figures
 
 # --- summary and PDF --------------------------------------------------------------------------
 $(BUILD)/tex/summary.tex: tools/make_summary.py $(STAMP_FILES)
