@@ -118,6 +118,7 @@ A search of summaries and titles found no papers on Wang tiles, Penrose or other
 - [MONOTILES.md](MONOTILES.md) for entry 155 next to the Chair44 aperiodic monotile and its matching rules.
 - [COMPLEXITY.md](COMPLEXITY.md) and [ETH.md](ETH.md) for the algorithmic side of perfect matchings.
 - [PHYSICS.md](PHYSICS.md) for the lattice-model and height-function papers.
+- [TILING_FRONTIER.md](TILING_FRONTIER.md) for recent outside references (polygonal and connected tiles, undecidability, kissing numbers, the gyrobifastigium) mapped onto entry 155.
 
 ## Caveats
 

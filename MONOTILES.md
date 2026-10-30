@@ -83,3 +83,4 @@ Entry 155 has no physical content. The Chair44 literature does: Flicker's paper 
 
 - [SPECTRE_CHAIR44.md](SPECTRE_CHAIR44.md) for the section-by-section citations.
 - [PERIODIC_TILING.md](PERIODIC_TILING.md), [TILING.md](TILING.md), [PHYSICS.md](PHYSICS.md).
+- [TILING_FRONTIER.md](TILING_FRONTIER.md) for the gyrobifastigium and the Nature Communications hat-diffraction experiment.
