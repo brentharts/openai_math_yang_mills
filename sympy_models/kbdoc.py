@@ -12,7 +12,7 @@ from pathlib import Path
 import sympy as sp
 
 import knowledgebase as kb
-from document import esc
+from document import cite, esc
 
 NUMBERS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
 
@@ -26,6 +26,20 @@ def words(n: int, singular: str, plural: str | None = None) -> str:
 def sym(name: str) -> str:
     """A letter of the knowledge base as inline math: 'k_B' -> $k_{B}$, 'hbar' -> $\\hbar$."""
     return "$" + sp.latex(sp.Symbol(name)) + "$"
+
+
+def href(url: str | None, text: str) -> str:
+    return rf"\href{{{url}}}{{{text}}}" if url else text
+
+
+def eq_name(eq: kb.KBEquation) -> str:
+    """Name of a library equation, linked to its Wikipedia article."""
+    return href(kb.wikipedia_url(eq.slug), esc(eq.name))
+
+
+def quantity_name(name: str) -> str:
+    """Name of a quantity, linked to its row of the glossary."""
+    return rf"\hyperref[{kb.quantity_label(name)}]{{{esc(name)}}}"
 
 
 def _longtable(spec: str, header: str, rows: list[str], caption: str = "") -> str:
@@ -66,12 +80,17 @@ def census_section() -> str:
 
 The equations above are modelled one paper at a time. This part joins them to a library of
 {words(len(lib.equations), 'equation')} and {words(len(lib.quantities), 'physical quantity', 'physical quantities')}
-copied from RosettaMath's \texttt{{rosettaphys.py}} (MIT licence), where an equation is a node, a
+copied from RosettaMath's \texttt{{rosettaphys.py}}~\cite{{rosettamath}} (MIT licence), where an equation is a node, a
 quantity is a node, and an equation is tied to the quantity each of its letters denotes. The algebra is
 different: RosettaMath reads the \LaTeX{{}} with its own term type, here it is read into sympy, so
 rearranging, eliminating and checking are done by sympy and every composition arrives as an
 equation of the registry with its checks. The graph has {len(g.nodes)} nodes and
-{len(g.edges)} edges; the tables of this section are computed from it when the document is built.
+{len(g.edges)} edges: {words(len(g.of_kind('equation')), 'equation')}, {words(len(g.of_kind('quantity')), 'quantity', 'quantities')},
+{words(len(g.of_kind('reference')), 'reference')}, {words(len(g.of_kind('entry')), 'repository entry', 'repository entries')} and
+{words(len(g.of_kind('wikipedia')), 'Wikipedia article')}. The tables of this section are computed from it when the
+document is built. Every equation and quantity of the library has a row in Appendices~\ref{{app:kb-readings}}
+and~\ref{{app:kb-quantities}}, where it is a labelled, linked target; names link to Wikipedia, citations to the
+bibliography, and entries to their sections (for example Sections~\ref{{sec:entry-216}} and~\ref{{sec:entry-271}}).
 
 \begin{{table}}[h]
 \centering\small
@@ -93,7 +112,8 @@ Each equation declares which quantity each of its letters denotes. Two equations
 quantity both declare, and only if every other letter they share is read the same way; an equation without
 readings takes part in no join. {words(len(readable), 'equation')} of {len(lib.equations)} are both readable
 and consistent with their readings; the other {len(lib.equations) - len(readable)} stay in the graph and are
-not rearranged, for the reasons in Table~\ref{{tab:kb-refused}}.
+not rearranged, for the reasons in Table~\ref{{tab:kb-refused}}. All of them are listed, with their readings, in
+Appendix~\ref{{app:kb-readings}}.
 
 \begin{{table}}[h]
 \centering\footnotesize
@@ -181,22 +201,44 @@ Where three or more equations state the same quantity directly they chain into o
 """
 
 
+def _formula(eq: kb.KBEquation) -> str:
+    """Statement of an equation for the appendix, or a note on why none is shown."""
+    rel = eq.relation()
+    if rel is not None:
+        return f"${sp.latex(rel)}$"
+    try:
+        num, den, rhs = kb.read_rate(eq.latex)
+        return rf"$\frac{{d {num}}}{{d {den}}}={sp.latex(rhs)}$"
+    except kb.Unreadable:
+        return rf"\textit{{not rearranged: {esc((eq.refusal or '').split(':')[0])}}}"
+
+
 def readings_appendix() -> str:
+    lib = kb.library()
     rows = []
-    for eq in kb.library().equations.values():
-        rel = eq.relation()
-        if rel is None:
-            continue
-        reads = ", ".join(f"{sym(s)}: {esc(q)}" for s, q in sorted(eq.reads.items()))
-        formula = sp.latex(rel)
-        rows.append(rf"{esc(eq.name)} & \multicolumn{{1}}{{p{{0.64\linewidth}}}}{{\raggedright ${formula}$ \newline {{\footnotesize {reads}}}}} \\[2pt]")
-    table = _longtable(r"@{}p{0.27\linewidth}p{0.66\linewidth}@{}", r"Equation & Statement and readings", rows,
-                       "The readable equations of the library, as sympy prints them, with what each letter denotes.")
+    for eq in lib.equations.values():
+        reads = ", ".join(f"{sym(s)}: {quantity_name(q)}" for s, q in sorted(eq.reads.items()) if s != "pi")
+        src = kb.reference_for_source(eq.source)
+        where = []
+        if src:
+            where.append(f"from{cite([src])}")
+        if eq.entry:
+            where.append(rf"entry~\hyperref[sec:entry-{eq.entry}]{{{eq.entry}}}")
+        extra = f"\\newline {{\\footnotesize {', '.join(where)}}}" if where else ""
+        body = rf"{_formula(eq)}" + (rf" \newline {{\footnotesize {reads}}}" if reads else "") + extra
+        rows.append(rf"\refstepcounter{{kbeq}}\label{{{kb.kb_label(eq.name)}}}\thekbeq & {eq_name(eq)} & "
+                    rf"{{\raggedright {body}}} \\[2pt]")
+    table = _longtable(r"@{}rp{0.22\linewidth}p{0.62\linewidth}@{}", r"No. & Equation & Statement and readings", rows,
+                       "The equations of the library, as sympy prints them (sympy chooses the layout, not the source), "
+                       "with what each letter denotes. The equation names link to Wikipedia; the quantities to Table~\\ref{app:kb-quantities}.")
     return rf"""
 \appendix
-\section{{The readable equations and their readings}}\label{{app:kb-readings}}
-Every equation the reader accepted, as sympy prints it (sympy chooses the layout, not the source), with what
-each letter denotes. An equation that is not here takes part in no join.
+\newcounter{{kbeq}}\renewcommand{{\thekbeq}}{{K\arabic{{kbeq}}}}
+\newcounter{{kbq}}\renewcommand{{\thekbq}}{{Q\arabic{{kbq}}}}
+\section{{The equations of the library and their readings}}\label{{app:kb-readings}}
+Every equation of the library, with what each of its letters denotes. An equation without readings, or one the
+reader declined, is still listed; it takes part in no join. The entries drawn from a repository cite it, and the
+entries drawn from a script of this repository point at the CONTENTS entry of that script.
 
 \begingroup\small
 {table}
@@ -204,10 +246,69 @@ each letter denotes. An equation that is not here takes part in no join.
 """
 
 
-def write(out_dir: Path) -> Path:
+def quantities_appendix() -> str:
+    lib = kb.library()
+    users: dict[str, list[str]] = {}
+    for eq in lib.equations.values():
+        for q in eq.quantities():
+            users.setdefault(q, []).append(eq.name)
+    rows = []
+    for q in sorted(users):
+        quantity = lib.quantities[q]
+        dim = _dim_tex(quantity.dimension)
+        shown = users[q][:8]
+        refs = ", ".join(rf"\ref{{{kb.kb_label(n)}}}" for n in shown) + (r", \dots" if len(users[q]) > len(shown) else "")
+        rows.append(rf"\refstepcounter{{kbq}}\label{{{kb.quantity_label(q)}}}\thekbq & "
+                    rf"{href(kb.wikipedia_url(quantity.slug), esc(q))} & {dim} & {refs} \\")
+    table = _longtable(r"@{}rp{0.3\linewidth}p{0.14\linewidth}p{0.36\linewidth}@{}", r"No. & Quantity & Dimension & Denoted in", rows,
+                       "The quantities that equations of the library denote, with their dimension in the basis $M,L,T,I,K,N$ "
+                       "and the equations (Appendix~\\ref{app:kb-readings}) that denote them.")
+    return rf"""
+\section{{The physical quantities}}\label{{app:kb-quantities}}
+Each quantity links to its Wikipedia article, carries a dimension, and lists the equations that denote it.
+
+\begingroup\small
+{table}
+\endgroup
+"""
+
+
+def _dim_tex(spec: str) -> str:
+    return "$" + sp.latex(kb._dimension_of(spec)) + "$" if spec.strip() != "1" else "$1$"
+
+
+def bibliography(keys) -> str:
+    refs = kb.references()
+    items = []
+    for key in sorted(set(keys), key=lambda k: (refs[k].kind != "preprint", refs[k].title.lower())):
+        r = refs[key]
+        note = f" {esc(r.note)}" if r.note else ""
+        year = "" if str(r.year) in r.note else f" {r.year}."
+        items.append(rf"\bibitem{{{key}}} {esc(r.authors)}. \emph{{{esc(r.title)}}}.{year}{note} \url{{{r.url}}}")
+    return ("% Generated by sympy_models/kbdoc.py. Do not edit by hand.\n"
+            "{\\small\\raggedright\n\\begin{thebibliography}{99}\n" + "\n".join(items) + "\n\\end{thebibliography}\n}\n")
+
+
+def cited_keys(eqs) -> set[str]:
+    keys = {"rosettamath"}
+    for eq in eqs:
+        keys.update(kb.citations_for(eq))
+        if eq.entry:
+            keys.update(r.key for r in kb.manuscripts_for(eq.entry))
+    for e in kb.library().equations.values():
+        ref = kb.reference_for_source(e.source)
+        if ref:
+            keys.add(ref)
+    return keys
+
+
+def write(out_dir: Path, eqs=()) -> list[Path]:
     path = out_dir / "knowledge_graph.tex"
     path.write_text(
         "% Generated by sympy_models/kbdoc.py from knowledgebase.py. Do not edit by hand.\n"
-        + census_section() + collisions_section() + families_section() + readings_appendix(),
+        + census_section() + collisions_section() + families_section()
+        + readings_appendix() + quantities_appendix(),
         encoding="utf-8")
-    return path
+    bib = out_dir / "bibliography.tex"
+    bib.write_text(bibliography(cited_keys(eqs)), encoding="utf-8")
+    return [path, bib]

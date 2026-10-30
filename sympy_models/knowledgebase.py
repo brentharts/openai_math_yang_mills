@@ -50,6 +50,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from functools import lru_cache
+from pathlib import Path
+from urllib.parse import unquote
 
 import sympy as sp
 
@@ -64,6 +66,9 @@ SPECIALISES = "specialises"  # a special case of a more general law (stated)
 LIMIT_OF = "limit-of"        # what a law becomes in some limit (stated)
 DEFINES = "defines"          # one equation giving another its meaning (stated)
 FIELD = "field"              # equations of the same kind (stated)
+SOURCED_FROM = "sourced-from"  # equation -> the reference (repository, manuscript) it was taken from
+EXPLAINED_BY = "explained-by"  # equation or quantity -> its Wikipedia article
+TREATS = "treats"            # repository entry -> the manuscript it summarises
 
 EDGE_NOTES = {
     DENOTES: "equation to the quantity one of its letters means",
@@ -74,6 +79,9 @@ EDGE_NOTES = {
     DEFINES: "one equation giving another its meaning",
     LIMIT_OF: "what a law becomes in some limit",
     FIELD: "equations of the same kind",
+    SOURCED_FROM: "equation to the reference (repository, manuscript) it was taken from",
+    EXPLAINED_BY: "equation or quantity to the Wikipedia article that explains it",
+    TREATS: "repository entry to the manuscript it summarises",
 }
 
 # Quantities too common to be a useful pivot: joining two equations on "mass" says only
@@ -478,6 +486,121 @@ def _dimension_of(spec: str) -> sp.Expr:
     return out
 
 
+
+# --------------------------------------------------------------------------------------
+# references: manuscripts of this repository, repositories, Wikipedia
+# --------------------------------------------------------------------------------------
+WIKI = "https://en.wikipedia.org/wiki/"
+PREPRINT_URL = "https://github.com/openai/math/blob/main/preprints/"
+PREPRINTS = Path(__file__).resolve().parent.parent / "preprints"
+
+# key -> (tag used in the models' source strings, CONTENTS entry, preprint directory)
+MANUSCRIPTS = {
+    "oai-bloch": ("B", "271", "Blochs-Law-for-Finite-Range-Heisenberg-Ferromagnets-in-Three-Dimensions-October-5-2026"),
+    "oai-bloch-correction": ("C", "271", "The-first-lattice-correction-to-Blochs-law-October-5-2026"),
+    "oai-spherical-magnetization": ("Sph", "271", "The-spherical-magnetization-law-for-the-three-dimensional-quantum-Heisenberg-ferromagnet-October-5-2026"),
+    "oai-xy-log": ("Log", "216", "The-critical-logarithmic-correction-for-the-planar-XY-model-October-5-2026"),
+    "oai-xy-essential": ("Ess", "216", "Essential-Singularity-of-the-Correlation-Length-in-the-Planar-XY-Model-October-5-2026"),
+    "oai-xy-height": ("Ht", "216", "BKT-universality-for-height-and-planar-spin-fields-September-24-2026"),
+    "oai-xy-center": ("Ctr", "216", "Critical-Center-Magnetization-in-the-Planar-XY-Model-October-5-2026"),
+    "oai-xy-spin": ("Spin", "216", "The-Critical-Spin-Field-of-the-Planar-XY-Model-October-5-2026"),
+    "oai-haldane": ("H", "268", "The-periodic-spin-one-Haldane-gap-September-24-2026"),
+    "oai-tiling": ("T", "155", "A-translational-tile-with-no-fully-periodic-tiling-in-dimension-three-September-23-2026"),
+    "oai-o4-mass": ("O4", "215", "Exact-mass-asymptotics-for-the-two-dimensional-O4-lattice-model-October-5-2026"),
+    "oai-o3-limit": ("O3", "215", "The-canonical-massive-continuum-limit-of-the-two-dimensional-O3-model-October-4-2026"),
+}
+ROSETTAMATH = {
+    "authors": "Brent Hartshorn", "title": "RosettaMath: a knowledge graph of equations and the papers generated from it",
+    "year": 2026, "repo": "brentharts/RosettaMath", "tag": "rosettamath",
+    "url": "https://github.com/brentharts/RosettaMath",
+    "note": "rosettaphys.py (the knowledge base) and rosettapaper.py (the generated paper); MIT licence.",
+}
+
+
+@dataclass(frozen=True)
+class Reference:
+    key: str
+    authors: str
+    title: str
+    year: int
+    url: str
+    kind: str                 # "preprint" | "repository"
+    note: str = ""
+    tag: str = ""             # how the models' source strings abbreviate it: "[Log]"
+    entry: str = ""           # CONTENTS entry, for a manuscript
+    repo: str = ""            # owner/name, for a repository
+
+
+def _manuscript(key: str, tag: str, entry: str, directory: str) -> Reference:
+    """A manuscript, with its title and file read from the README of its preprint directory."""
+    title, pdf, date = directory.replace("-", " "), "paper.pdf", "2026"
+    readme = PREPRINTS / directory / "README.md"
+    if readme.exists():
+        text = readme.read_text(encoding="utf-8")
+        m = re.search(r"^# \[(.+?)\]\((.+?)\)", text, re.M)
+        if m:
+            title, pdf = m.group(1), m.group(2)
+        d = re.search(r"\*\*Date:\*\*\s*(.+)", text)
+        date = d.group(1).strip() if d else date
+    return Reference(key, "OpenAI", title, int(re.search(r"(\d{4})\s*$", date).group(1)) if re.search(r"(\d{4})\s*$", date) else 2026,
+                     f"{PREPRINT_URL}{directory}/{pdf}", "preprint",
+                     note=f"OpenAI Math Release preprint, {date}.", tag=tag, entry=entry)
+
+
+@lru_cache(maxsize=1)
+def references() -> dict[str, Reference]:
+    """Every reference the document can cite, by key: manuscripts, then repositories."""
+    out = {k: _manuscript(k, *v) for k, v in MANUSCRIPTS.items()}
+    for key, r in {**REFERENCES_DATA, "rosettamath": ROSETTAMATH}.items():
+        title = r["title"] + (": " + r["subtitle"] if r.get("subtitle") else "")
+        out[key] = Reference(key, r["authors"], title, r["year"], r["url"], "repository",
+                             note=r.get("note", ""), tag=r.get("tag", ""), repo=r["repo"])
+    return out
+
+
+def reference_for_source(source: str | None) -> str | None:
+    """The repository reference a knowledge-base `source` names ('owner/name: ...'), or None."""
+    for key, ref in references().items():
+        if ref.repo and source and source.startswith(ref.repo + ":"):
+            return key
+    return None
+
+
+def manuscripts_for(entry: str) -> list[Reference]:
+    return [r for r in references().values() if r.kind == "preprint" and r.entry == entry]
+
+
+def citations_for(eq) -> list[str]:
+    """Reference keys for an `eqlib.Equation`: the manuscripts its source string tags
+    ([Log], [Ess], ...), a repository named in the source, and any in `eq.cites`."""
+    refs = references()
+    keys: list[str] = []
+    for tag in re.findall(r"\[([A-Za-z0-9]+)\]", eq.source or ""):
+        keys += [k for k, r in refs.items() if r.kind == "preprint" and r.tag == tag
+                 and (not eq.entry or r.entry == eq.entry)]
+    for k, r in refs.items():
+        if r.repo and r.repo in (eq.source or ""):
+            keys.append(k)
+    keys += list(getattr(eq, "cites", []))
+    return list(dict.fromkeys(k for k in keys if k in refs))
+
+
+def slug(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+
+
+def kb_label(name: str) -> str:
+    """The LaTeX label of a knowledge-base equation (its row of the readings appendix)."""
+    return "kbeq:" + slug(name)
+
+
+def quantity_label(name: str) -> str:
+    return "kbq:" + slug(name)
+
+
+def wikipedia_url(slug_: str | None) -> str | None:
+    return WIKI + slug_ if slug_ else None
+
 # --------------------------------------------------------------------------------------
 # the library: built once from the data at the bottom of this file
 # --------------------------------------------------------------------------------------
@@ -528,6 +651,31 @@ class Library:
 
         for a, kind, b, note in self.links:
             g.link(kind.lower().replace("_", "-"), self.equations[a].node, self.equations[b].node, note)
+
+        # references: the manuscripts and repositories, and what was taken from each
+        for ref in references().values():
+            g.add(Node("reference", ref.key, ref.title, {"reference": ref}))
+            if ref.entry and g.get("entry", ref.entry) is None:
+                g.add(Node("entry", ref.entry, f"entry {ref.entry}"))
+        for ref in references().values():
+            if ref.entry:
+                g.link(TREATS, g.get("entry", ref.entry), g.get("reference", ref.key), ref.tag)
+        for eq in self.equations.values():
+            g.link(SOURCED_FROM, eq.node, g.get("reference", reference_for_source(eq.source) or ""), eq.source or "")
+
+        # Wikipedia: one node per article, tied to the equations and quantities it explains
+        def wiki(slug_: str | None):
+            if not slug_:
+                return None
+            node = g.get("wikipedia", slug_)
+            if node is None:
+                node = g.add(Node("wikipedia", slug_, unquote(slug_).replace("_", " "),
+                                  {"url": WIKI + slug_}))
+            return node
+        for eq in self.equations.values():
+            g.link(EXPLAINED_BY, eq.node, wiki(eq.slug))
+        for q in self.quantities.values():
+            g.link(EXPLAINED_BY, g.get("quantity", q.name), wiki(q.slug))
         return g
 
 
@@ -861,12 +1009,18 @@ def refusals() -> dict[str, list[str]]:
 def join_to_equation(j: Join, entry: str | None = None):
     """The join as an `eqlib.Equation` of kind 'derived', checks recorded on it."""
     import eqlib
+    quantity = library().quantities.get(j.pivot)
+    cites = [r for r in ("rosettamath", reference_for_source(j.a.source), reference_for_source(j.b.source)) if r]
     return eqlib.Equation(
         key=j.key, title=j.title, source_kind="derived",
         source=f"knowledgebase.join({j.a.name!r}, {j.b.name!r}); pivot {j.pivot}",
         expr=j.statement, latex_str=j.latex(),
         entry=j.entry if entry is None else entry, notes=j.notes
         + (" At least one side was rearranged from the quoted form." if j.rearranged else ""),
+        cites=list(dict.fromkeys(cites)),
+        see=[(kb_label(j.a.name), j.a.name, wikipedia_url(j.a.slug)),
+             (kb_label(j.b.name), j.b.name, wikipedia_url(j.b.slug)),
+             (quantity_label(j.pivot), j.pivot + " (the pivot)", wikipedia_url(quantity.slug if quantity else None))],
     )
 
 
@@ -3591,3 +3745,97 @@ LINKS_DATA = [('Schrodinger equation (time-independent)',
   'the tiling supplies the length factor and nothing else: at one loop the block step depends on '
   'it only through its logarithm, so any scale factor would do, and what the Spectre adds is a '
   'particular irrational one')]
+
+REFERENCES_DATA = {'elsbernd2026': {'authors': 'Michael Elsbernd',
+                  'title': 'Observable-Dependent Computational Efficiency of Microcanonical '
+                           'Overrelaxation in Finite-Lattice SU(2) Yang-Mills Simulation',
+                  'subtitle': 'A Paired Effective-Sample-Size-per-Second Study Across Bare Wilson '
+                              'Couplings',
+                  'year': 2026,
+                  'repo': 'Elsbernd09/yang-mills-mass-gap-lab',
+                  'tag': 'ymlab',
+                  'url': 'https://github.com/Elsbernd09/yang-mills-mass-gap-lab',
+                  'manuscript': 'docs/final_research_paper.md',
+                  'note': 'Yang-Mills Mass Gap Laboratory (ymlab): software and manuscript. A '
+                          'finite-lattice study; it does not claim to solve the Clay mass-gap '
+                          'problem.'},
+ 'openai2026': {'authors': 'OpenAI manuscript collection, fork tools by brentharts',
+                'title': 'Physics models for the OpenAI math release',
+                'subtitle': 'fork-level illustrations of entries 215, 216, 268 and 271; not part '
+                            'of the OpenAI release',
+                'year': 2026,
+                'repo': 'brentharts/openai_math_yang_mills',
+                'tag': 'openai-math',
+                'url': 'https://github.com/brentharts/openai_math_yang_mills',
+                'manuscript': 'tools/README.md',
+                'note': 'Python models (Monte Carlo, Kosterlitz flow, Bloch density, exact '
+                        "diagonalisation) that reproduce textbook forms next to the manuscripts' "
+                        'statements. They do not re-prove the manuscripts, and the repository '
+                        'contains no Yang-Mills manuscript.'},
+ 'cicy2026': {'authors': 'Robin Schneider (pyCICY) and the CICY fork by brentharts',
+              'title': 'Exact Methods in String Theory and QFT',
+              'subtitle': 'from a configuration matrix to a curve on a surface',
+              'year': 2026,
+              'repo': 'brentharts/CICY',
+              'tag': 'CICY',
+              'url': 'https://github.com/brentharts/CICY',
+              'manuscript': 'README.md',
+              'note': 'Pure-Python exact-arithmetic toolkit for Calabi-Yau topology, heterotic and '
+                      'F-theory model building and the one-loop couplings that follow. It states '
+                      'where exactness ends: no physical couplings, masses or moduli.'},
+ 'nariai2026': {'authors': 'B. S. Hartshorn (nariai repository)',
+                'title': 'Aperiodic Vacuum Structure from BRST Cohomology on the Nariai Background',
+                'subtitle': 'the substitution algebra behind the paper, with its retraction',
+                'year': 2026,
+                'repo': 'brentharts/nariai',
+                'tag': 'nariai',
+                'url': 'https://github.com/brentharts/nariai',
+                'manuscript': 'README.md',
+                'note': 'The tiling algebra of the repository -- inflation factors, the gap-label '
+                        'recurrence, the growth rate -- is taken from its single source of truth, '
+                        'which derives everything from the substitution matrix. The repository '
+                        "withdrew an earlier inflation factor, 2.5348, that was not the spectre's, "
+                        'and every entry here uses the corrected ones; the physical predictions '
+                        'built on the algebra are not in the library and are not claimed.'},
+ 'chirality2026': {'authors': 'Emad Mostaque',
+                   'title': 'From Chirality to the Standard Model',
+                   'subtitle': 'a uniqueness and no-go theorem for compact Lie-algebra embeddings',
+                   'year': 2026,
+                   'repo': 'emad-ii/chirality-standard-model',
+                   'tag': 'chirality',
+                   'url': 'https://github.com/emad-ii/chirality-standard-model',
+                   'manuscript': 'paper/paper.tex',
+                   'note': 'Exactly one compact Lie-algebra pair, E8 containing E6 times SU(3) '
+                           'with the family module 27 tensor 3, has a complex-type complement '
+                           'whose cubic anomaly has a nonzero radical; the paper proves it, exact '
+                           'Python recomputes the finite censuses from two root-system '
+                           'realisations, and finite Lean theorems check the E6 incidence. The '
+                           'library takes the arithmetic of that and none of the physical '
+                           'interpretation.'},
+ 'lisi2026': {'authors': 'B. S. Hartshorn (lisi bridge in the chirality fork)',
+              'title': 'Lisi bridge: two ways to see three families inside E8',
+              'subtitle': 'root-level checks of the E8 branching, triality and the magic square',
+              'year': 2026,
+              'repo': 'brentharts/chirality-standard-model',
+              'tag': 'lisi',
+              'url': 'https://github.com/brentharts/chirality-standard-model',
+              'manuscript': 'lisi/THEORY.md',
+              'note': "Exact root-system computations in the fork's lisi directory that connect "
+                      'the chirality theorem to the E8 programme of Lisi and to the '
+                      'Distler-Garibaldi no-go theorem. Its THEORY.md marks each result as checked '
+                      'or not checked, and says that a root computation cannot see a real form. '
+                      'The library takes only the checked dimension counts.'},
+ 'spectre2026': {'authors': 'B. S. Hartshorn (spectre repository)',
+                 'title': 'The Spectre and the Hat: exact arithmetic, torsion on the Hat lattice, '
+                          'diffraction',
+                 'subtitle': 'what a substitution determines, and what a kernel cannot reach',
+                 'year': 2026,
+                 'repo': 'brentharts/spectre',
+                 'tag': 'spectre',
+                 'url': 'https://github.com/brentharts/spectre',
+                 'manuscript': 'spectre_substrate.tex',
+                 'note': 'Exact computations on the Spectre monotile of Smith, Myers, Kaplan and '
+                         'Goodman-Strauss and on the Hat, with an evidence ledger that grades '
+                         'every fact as derived, counted, second-route, quoted, premised or '
+                         "Lean-checked. The tile and its substitution are the discoverers' work; "
+                         "the computations on them are this repository's."}}
