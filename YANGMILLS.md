@@ -59,6 +59,9 @@ Two other repositories work on the Yang-Mills side of this question with code, a
 
 - [CICY](https://github.com/brentharts/CICY) holds exact tree-level gluon amplitudes and the one-loop gauge-coupling running. [YM_CONNECTIONS.md](YM_CONNECTIONS.md) lists every connection of this kind with its strength and its limits; none touches the mass gap.
 
+- [yang-mills-3d-forest-gauge](https://github.com/romanov360/yang-mills-3d-forest-gauge) (Tristan Romanov, MIT) proves a mass bound for `SU(2)` lattice gauge theory on `Z³` at strong coupling in a period-3 forest gauge, and a spectral-gap range from a certified Hessian bound. The fork's `forest_gauge.py` rederives the counts, the thresholds and an exact lower bound for the Hessian constant. It is a lattice result at strong coupling in three dimensions: it does not reach the continuum limit, and does not bear on the problem stated above.
+- [yang-mills-4d-forest-certificate](https://github.com/romanov360/yang-mills-4d-forest-certificate) (Tristan Romanov, MIT) is the four-dimensional sequel: it proves a Hessian bound `h_F ≤ 14.420001` for the period-2 forest, sharpening Bhattacharjee–Bhattacharya–Lockwood's `29/2`, so the strong-coupling window becomes `|β| < 1/28.84`. The fork's `forest_gauge_4d.py` rederives the counts, the identity-field value and the window arithmetic. The repository's own `NEXT.md` notes that a gap uniform in lattice units cannot be the continuum step, so the result stays at fixed spacing and strong coupling.
+
 These are numerical and bookkeeping aids. The gap noted above, between two-dimensional sigma models and four-dimensional Yang-Mills, is unchanged.
 
 Neutral overview of the problem and its status: [nLab: Yang-Mills mass gap](https://ncatlab.org/nlab/show/Yang-Mills+mass+gap).
