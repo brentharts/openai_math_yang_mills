@@ -82,7 +82,8 @@ def build_and_verify():
         key="hi_trim_formula", entry=ENTRY, title="The Hopf invariant as a sum over the eight TRIM",
         source_kind="derived", source=f"derived here; checked against the repository's degree integral in {DOC} figure A",
         latex_str=(r"N_H(h)=\sum_{k\in\mathrm{TRIM}}\chi(k)\,\Theta(-m(k)),\quad \chi=\cos k_x\cos k_y\cos k_z;"
-                   r"\qquad N_H=0,-1,+2,-1,0\ \text{for}\ h>3,\ 1<h<3,\ |h|<1,\ -3<h<-1,\ h<-3"),
+                   r"%%BR%%N_H=0,-1,+2,-1,0\ \text{for}\ h>3,\ 1<h<3,\ |h|<1,\ -3<h<-1,\ h<-3"),
+        cites=["moore-ran-wen", "deng-wang-shen-duan"],
         notes="Each TRIM is a point where z1 = 0 and d is the south pole, with orientation chi, so the invariant counts "
               "signed TRIM with m < 0. This closed form was found for the repository's figures and checked against "
               "its numerical degree integral at 13 values of h; here it is evaluated exactly. The identification of "

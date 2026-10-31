@@ -53,7 +53,7 @@ def build_and_verify():
                                            + sp.LeviCivita(a, b, c) * (A[b][mu] * A[c][nu] - A[c][mu] * A[b][nu]))
 
     eq_f = register(NAME, Equation(
-        key="hg_bpst_field", entry=ENTRY, title="The BPST instanton: A, F and self-duality (classical SU(2))",
+        key="hg_bpst_field", entry=ENTRY, cites=["bpst-1975"], title="The BPST instanton: A, F and self-duality (classical SU(2))",
         source_kind="textbook", source=SRC,
         latex_str=(r"A^a_\mu=\frac{2\,\eta^a_{\mu\nu}x_\nu}{x^2+\rho^2},\qquad "
                    r"F^a_{\mu\nu}=-\frac{4\,\eta^a_{\mu\nu}\rho^2}{(x^2+\rho^2)^2},\qquad F=\tilde F"),
@@ -81,7 +81,7 @@ def build_and_verify():
     # dens is radial (checked equal to the closed form below), so the integral is the radial one times the S^3 area
     c2 = sp.integrate((192 * rho**4 / (rr**2 + rho**2) ** 4) * vol, (rr, 0, sp.oo)) / (32 * sp.pi**2)
     eq_c2 = register(NAME, Equation(
-        key="hg_bpst_c2", entry=ENTRY, title="The second Chern number of the BPST instanton is 1",
+        key="hg_bpst_c2", entry=ENTRY, cites=["bpst-1975"], title="The second Chern number of the BPST instanton is 1",
         source_kind="textbook", source=SRC,
         latex_str=(r"F^a_{\mu\nu}\tilde F^a_{\mu\nu}=\frac{192\,\rho^4}{(x^2+\rho^2)^4},\qquad "
                    r"c_2=\frac{1}{32\pi^2}\int_{\mathbb R^4}F^a_{\mu\nu}\tilde F^a_{\mu\nu}\,d^4x=1"),

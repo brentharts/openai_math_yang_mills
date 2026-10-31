@@ -96,7 +96,7 @@ def build_and_verify():
         key="hf_invariant", entry=ENTRY, title="Hopf invariant 1 from the connection form",
         source_kind="derived", source=f"derived here (Hopf coordinates); compare {DOC} figure 4",
         latex_str=(r"h^*\sigma=-2\,dA,\quad A=\mathrm{Im}(\bar z\,dz),\qquad "
-                   r"H=\frac{1}{4\pi^2}\int_{S^3}A\wedge dA=1"),
+                   r"H=\frac{1}{4\pi^2}\int_{S^3}A\wedge dA=\pm1"),
         notes="The pull-back of the area form sigma of the unit S^2 is -2 dA for this h (the sign is orientation), so "
               "(1/4 pi) h^* sigma = -dA / 2 pi has primitive -A / 2 pi and the Hopf invariant is (1/4 pi^2) Int A ^ dA "
               "(the sign of the primitive cancels in the product). The integral is exact below.",
