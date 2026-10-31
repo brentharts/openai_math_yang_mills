@@ -15,7 +15,7 @@ STAMP_FILES := $(addprefix $(STAMPS)/,$(addsuffix .stamp,$(SCRIPTS)))
 COMMON      := tools/common.py
 
 .DEFAULT_GOAL := all
-.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta sympy sympy-pdf hopf clean
+.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta sympy sympy-pdf hopf su2 clean
 
 all: pdf
 
@@ -28,6 +28,7 @@ help:
 	@echo "make bloch | on | kt | haldane | chair44    run a single model"
 	@echo "make sympy      run the sympy models in sympy_models/ and export their equations (build in sympy_models/build/)"
 	@echo "make hopf       check only the Hopf models (fibration, insulator, BPST); see HOPF_GAUGE.md"
+	@echo "make su2        check only the SU(2) lattice-gap models (2D string tension, one-plaquette gap, two-plaquette ladder); see SU2_LATTICE_GAP.md"
 	@echo "make sympy-pdf  also build sympy_models/build/equations_document.pdf, grouped by CONTENTS entry"
 	@echo "make figures     regenerate the committed figures/*.png used by SPECTRE_CLOCK_AND_CHAIR44.md (about 90 s)"
 	@echo "make combinatorics  exact checks and figures for COMBINATORICS_REPRESENTATIONS.md (about 1 min; needs networkx)"
@@ -75,6 +76,9 @@ sympy-pdf:
 # Run only the checks of the Hopf models (no export; a partial export currently stops in concise.py). See HOPF_GAUGE.md.
 hopf:
 	cd sympy_models && $(PY) -c "import importlib, eqlib; [importlib.import_module('models.' + m).build_and_verify() for m in ('hopf_fibration', 'hopf_insulator', 'hopf_gauge')]; print(len(eqlib.checks()), 'checks passed in 3 Hopf models')"
+
+su2:
+	cd sympy_models && $(PY) -c "import importlib, eqlib; [importlib.import_module('models.' + m).build_and_verify() for m in ('su2_lattice_gap', 'su2_lattice_ladder')]; print(len(eqlib.checks()), 'checks passed in the 2 SU(2) lattice-gap models')"
 
 # --- summary and PDF --------------------------------------------------------------------------
 $(BUILD)/tex/summary.tex: tools/make_summary.py $(STAMP_FILES)
