@@ -20,7 +20,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 
-ORDER = ("su_so", "spinor_series", "e8_gradings", "generation_bound", "weak_mixing", "kb_paths")
+ORDER = ("su_so", "spinor_series", "e8_gradings", "generation_bound", "weak_mixing", "hat_golden", "ym_mass_gap", "kb_paths")
 
 
 @dataclass
