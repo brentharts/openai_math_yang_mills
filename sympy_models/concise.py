@@ -186,6 +186,21 @@ SELECTED = (
      "The one-loop coefficients derived from the field content, and what eliminating the unified coupling predicts. "
      "The $SU(3)$ coefficient is the asymptotic-freedom number of Section~\\ref{sec:ym}; running at one loop is "
      "perturbative and says nothing about a gap."),
+    ("A strong-coupling lattice result in a forest gauge", "forest-gauge",
+     ("fg_partners", "fg_dobrushin", "fg_hessian_range", "fg_lower_bound"),
+     "Exact reimplementation of the counts and arithmetic of a companion repository on $SU(N)$ lattice gauge theory in "
+     "three dimensions: seven plaquette partners per free link in the period-3 forest gauge, the resulting strong-coupling "
+     "ranges, and an exact lower bound for the Hessian constant at the identity field. The two theorems and the "
+     "interval-arithmetic certificate are quoted, not rerun. This is a lattice result at strong coupling in three "
+     "dimensions; it is not the continuum problem and says nothing about existence or a mass gap of quantum "
+     "Yang--Mills on $\\mathbb R^4$ (Section~\\ref{sec:ym})."),
+    ("The four-dimensional forest gauge", "forest-gauge", ("fg4_forest", "fg4_identity", "fg4_ranges"),
+     "The same construction in four dimensions, where every plaquette contains exactly one fixed link. The fork counts the "
+     "forest, recomputes the identity-field value $9+\\sqrt{17}$ exactly, and checks the arithmetic of the window "
+     "$|\\beta|<1/(2h)$ at $h=29/2$ and at the repository's $h=14.420001$. The proved bound itself (an exact rational "
+     "certificate, a Lean-checked sum-of-squares step and an interval cover) is quoted, and the lower bound $13.974$ is a "
+     "floating-point search. The window is a strong-coupling statement at a fixed spacing; it is not the continuum limit and "
+     "says nothing about existence or a mass gap on $\\mathbb R^4$ (Section~\\ref{sec:ym})."),
     ("The BPST instanton (textbook, classical)", "hopf-fibration", ("hg_bpst_c2",),
      "A classical Euclidean $SU(2)$ solution whose second Chern number is a topological integer. It is standard "
      "material, included because its boundary map is the three-sphere of the Hopf fibration, and it says nothing "
@@ -533,7 +548,8 @@ def introduction(nums: dict, figure_checks: int) -> str:
         "The checks test that stated formulas agree with one another and with independent computation; they do not "
         "re-prove any theorem of the release. Identities are kept apart from correspondences, which are drawn as "
         "arrows (Section~\\ref{sec:physics}). A short appendix (Section~\\ref{sec:selected}) adds checks of the Hopf "
-        "fibration, the Hopf insulator and the BPST instanton, which share the three-sphere and no theorem.\n")
+        "fibration, the Hopf insulator and the BPST instanton, which share the three-sphere and no theorem, and the counts and arithmetic of two "
+        "strong-coupling lattice results, in three and four dimensions.\n")
 
 
 DEDICATED = ("hat_golden", "ym_mass_gap")        # get sections of their own
@@ -604,7 +620,11 @@ def conclusion() -> str:
         "The appendix's Hopf material is a separate, topological thread. The Hopf fibration has Hopf invariant one, "
         "the Hopf insulator's invariant is a signed count over eight momenta ($0,-1,+2,-1,0$ across the phases), and "
         "the BPST instanton has second Chern number one. They share the three-sphere, not a theorem; the "
-        "insulator's band gap and the instanton number are not a Yang--Mills mass gap.\n\n"
+        "insulator's band gap and the instanton number are not a Yang--Mills mass gap. The forest-gauge group is a "
+        "different kind of result: a rigorous but strong-coupling, three-dimensional lattice statement, of which the fork checks the "
+        "seven-partner count, the thresholds and the identity-field lower bound $9.3479$ for the Hessian constant (the "
+        "certified upper bound is $9.599991$). Its four-dimensional sequel proves $h_F\\le14.420001$ against BBL's $29/2$, a gain of about half a percent in the window, "
+        "at a fixed lattice spacing and strong coupling.\n\n"
         "Three limits apply throughout. The checks test internal consistency, not the truth of cited theorems; "
         "several inputs are quoted from repositories, not derived; the one-loop numbers are illustrations; and the Hopf and instanton items are classical or non-interacting. The "
         "natural next steps are a geometric derivation of the hat's substitution entries from its tile, a check of "

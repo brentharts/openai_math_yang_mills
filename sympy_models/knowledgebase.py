@@ -528,10 +528,18 @@ PSEUDO_ENTRIES = {   # key -> (short label for tables, section title)
     "hopf-fibration": ("HF", "The Hopf fibration, closed forms and linking (companion repository)"),
     "hopf-insulator": ("HI", "The three-dimensional Hopf insulator (companion repository)"),
     "cicy-gauge": ("CG", "Gluon amplitudes and gauge-coupling running (companion repository CICY)"),
+    "forest-gauge": ("FG", "Strong-coupling lattice gauge theory in a forest gauge (companion repository)"),
 }
 
 # References outside the OpenAI release, as the fork's notes cite them (SPECTRE_CHAIR44.md, "Citation key").
 EXTERNAL = {
+    "bbl-2026": dict(
+        tag="BBL", entry="forest-gauge", authors="D. Bhattacharjee, U. Bhattacharya and J. M. Lockwood",
+        title="Yang-Mills mass gap in 4D: lattice SU(N) and every compact simple group",
+        year=2026, url="https://doi.org/10.5281/zenodo.23729004", doi="10.5281/zenodo.23729004",
+        note="Zenodo record (v3.19.0 cited by the 4D forest repository); strong-coupling lattice result at fixed "
+             "spacing, code at github.com/creelie/4Y-M. Not peer reviewed as far as the fork knows.",
+        status="Not peer reviewed."),
     "hartshorn-romanov": dict(
         tag="HR", entry="spectre-chair44", authors="B. Hartshorn and T. Romanov",
         title="The Internal Space and Boundary Growth of the Spectre and Tsiokos's Chair44 Tilings",
@@ -4147,6 +4155,28 @@ REFERENCES_DATA = {'elsbernd2026': {'authors': 'Michael Elsbernd',
                        'manuscript': 'HOPF_FIGURES.md',
                        'note': 'GPL-2.0 scripts and notes; the library rederives the closed forms the figures '
                                'rely on and does not copy the scripts. The figures themselves are not rerun.'},
+ 'forestgauge2026': {'authors': 'T. Romanov (yang-mills-3d-forest-gauge repository)',
+                     'title': 'Strong-coupling lattice Yang-Mills in three dimensions with a period-3 forest gauge',
+                     'subtitle': 'Dobrushin uniqueness, a certified Hessian bound and a Lean check of the counts',
+                     'year': 2026,
+                     'repo': 'romanov360/yang-mills-3d-forest-gauge',
+                     'tag': 'forest',
+                     'url': 'https://github.com/romanov360/yang-mills-3d-forest-gauge',
+                     'manuscript': 'paper/paper.tex',
+                     'note': 'MIT code, CC BY 4.0 paper, doi:10.5281/zenodo.23783317 (v1.0.0); the library rederives the counts and the arithmetic and does '
+                             'not copy the scripts. The interval-arithmetic certificate and the Lean file are quoted, '
+                             'not rerun. A lattice strong-coupling result, not the continuum problem.'},
+ 'forestcert2026': {'authors': 'T. Romanov (yang-mills-4d-forest-certificate repository)',
+                    'title': 'A proved bound h_F <= 14.420001 for the four-dimensional forest-gauge Hessian',
+                    'subtitle': 'an exact rational certificate, an all-phase sum-of-squares check in Lean, and an interval proof',
+                    'year': 2026,
+                    'repo': 'romanov360/yang-mills-4d-forest-certificate',
+                    'tag': 'forestcert',
+                    'url': 'https://github.com/romanov360/yang-mills-4d-forest-certificate',
+                    'manuscript': 'PROOF.md',
+                    'note': 'MIT code, CC BY 4.0 text; the library rederives the combinatorics and the arithmetic and does '
+                            'not copy the scripts. The certificate, the Lean kernel checks and the interval cover are '
+                            'quoted, not rerun. A strong-coupling result at fixed lattice spacing, not the continuum limit.'},
  'quantumlattice2026': {'authors': 'B. S. Hartshorn (quantum-lattice repository)',
                         'title': 'Quantum Lattice: a PySide6 front end for tight-binding calculations',
                         'subtitle': 'with the three-dimensional Hopf insulator and its figures',
