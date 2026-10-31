@@ -25,7 +25,7 @@ omega_s = sqrt(3/2), omega_d = sqrt(5/2)) and compared with the numerical spectr
 The strong-coupling splitting of the doubly degenerate first excited level is derived by exact degenerate
 second-order perturbation theory in exact arithmetic and compared with the numbers.
 
-Not tested: three or more plaquettes (the strip formula in su2_ladder_weak is a prediction from the same harmonic
+Not tested here: three or more plaquettes (N = 3 is now in models/su2_lattice_strip.py; the strip formula in su2_ladder_weak is a prediction from the same harmonic
 argument, verified here only for one and two plaquettes), periodic boundary conditions, any scaling window or
 continuum limit, higher-order strong-coupling terms, the first correction in g^2 at weak coupling (only the limit is
 checked), the 2+1D and 3+1D theories. Nothing here bears on existence or a mass gap of Yang-Mills on R^4.
