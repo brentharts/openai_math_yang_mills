@@ -77,6 +77,10 @@ sympy-pdf:
 hopf:
 	cd sympy_models && $(PY) -c "import importlib, eqlib; [importlib.import_module('models.' + m).build_and_verify() for m in ('hopf_fibration', 'hopf_insulator', 'hopf_gauge')]; print(len(eqlib.checks()), 'checks passed in 3 Hopf models')"
 
+# Build only the quantum gravity paper's inputs (full export; see QUANTUM_GRAVITY.md).
+qg:
+	$(PY) sympy_models/export.py --pdf
+
 su2:
 	cd sympy_models && $(PY) -c "import importlib, eqlib; [importlib.import_module('models.' + m).build_and_verify() for m in ('su2_lattice_gap', 'su2_lattice_ladder')]; print(len(eqlib.checks()), 'checks passed in the 2 SU(2) lattice-gap models')"
 
