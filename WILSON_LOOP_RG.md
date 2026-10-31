@@ -95,3 +95,4 @@ Neither remark supports or tests the programme's claims.
 - [YANGMILLS.md](YANGMILLS.md): the status of the reported claim.
 - [YM_CONNECTIONS.md](YM_CONNECTIONS.md): every connection to Yang–Mills the fork has checked, ranked by strength.
 - [SU2_LATTICE_GAP.md](SU2_LATTICE_GAP.md): the exact lattice results.
+- [MACHINE_CHECKED_QFT.md](MACHINE_CHECKED_QFT.md): a different route to lattice Yang-Mills (cluster expansions, formalized in Lean), also building on Bałaban's RG; no cross-reference to this programme was found in its documents.
