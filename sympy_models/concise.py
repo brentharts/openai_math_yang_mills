@@ -64,6 +64,19 @@ SHORT = {
     "Lattice coupling": "lattice coupling",
     "Golden ratio": "golden ratio",
     "Penrose tile ratio": "Penrose tiles",
+    "Half-spinor dimension": "half-spinor",
+    "E6 fundamental branching": "$27=1+16+10$",
+    "Chirality splitting": "chirality splitting",
+    "Net chiral class": "net chiral class",
+    "Weight vector demand": "weight demand",
+    "Standard Model content of the 27": "$27=15+10+2$",
+    "Hypercharge": "hypercharge",
+    "Gell-Mann-Nishijima formula": "Gell-Mann--Nishijima",
+    "Orthogonal algebra dimension": "$\\mathfrak{so}(n)$",
+    "Special unitary dimension": "$\\mathfrak{su}(N)$",
+    "Product representation dimension": "family module",
+    "Hypercharge normalisation": "traces",
+    "Weak mixing at unification": "$\\sin^2\\theta_W$",
 }
 
 # Figure 1: quantities named rather than computed, for the reason RosettaMath names its pivots:
@@ -126,12 +139,35 @@ TRANSMUTATION_ARROWS = (
     ("Spin block coupling", "Gauge block coupling"),
 )
 
+# Figure 4: Lie algebras, chirality and the Standard Model. Each row is one quantity stated by
+# several library equations; its letters other than the row's own take the values written here
+# (one concrete case: the SO(10) 27, three generations, the left-handed up quark), and every
+# term must then equal the first. The arrows are links of the library, not equations.
+CHIRALITY_ROWS = (
+    ("half-spinor dimension", "S", ("Half-spinor dimension", "E6 fundamental branching", "Chirality splitting"),
+     {"n": 10, "D_f": 27, "s": 32}, "$n=10$"),
+    ("generation count", "N_gen", ("Net chiral class", "Weight vector demand"),
+     {"chi_V": 3, "chi_F": 1, "W": 180, "F": 15}, "three generations"),
+    ("Weyl fields per generation", "F", ("Weight vector demand", "Standard Model content of the 27"),
+     {"W": 180, "N_gen": 3, "D_f": 27}, "the 27"),
+    ("hypercharge", "Y", ("Hypercharge", "Gell-Mann-Nishijima formula"),
+     {"q": 1, "Q": sp.Rational(2, 3), "T_3": sp.Rational(1, 2)}, "left-handed up quark"),
+)
+CHIRALITY_ARROWS = (
+    ("Orthogonal algebra dimension", "Special unitary dimension"),
+    ("Product representation dimension", "Standard Model content of the 27"),
+    ("Weight vector demand", "Net chiral class"),
+    ("Hypercharge normalisation", "Weak mixing at unification"),
+)
+
 # registered sympy results shown as single large displays, with one line of prose each
 SELECTED = (
     ("Bloch's law", "271", ("bloch_theorem", "bloch_correction_corollary")),
     ("The Kosterlitz--Thouless flow", "216", ("kt_limiting_flow", "kt_pole_time", "kt_amplitude")),
     ("Asymptotic scaling of the $O(N)$ mass gap", "215", ("on_mass_af", "on_log_slope")),
     ("The Chair44 and Spectre tilings", "spectre-chair44", ("chair44_contact_formula", "spectre_window_dimension")),
+    ("E8, the family grading and the weak mixing angle", "chirality-lisi",
+     ("cl_e8_gradings", "cl_z3_z3_table", "cl_weak_mixing")),
     ("Yang--Mills asymptotic freedom", "", ("ym_b0", "ym_lattice_scale", "ym_log_slope")),
 )
 
@@ -322,6 +358,32 @@ def geometry_figure():
     return d, _figure("fig:geometry", d.tex(), cap, 0.9)
 
 
+def chirality_figure():
+    d = Display()
+    for quantity, letter, names, assign, label in CHIRALITY_ROWS:
+        d.geometry_row(quantity, letter, names, assign, label)
+    # one more number: E8 counted by the two order-three gradings and the involution
+    d.raw_row(r"\overbrace{\dim E_8}^{\text{\tiny three readings}} &= "
+              r"\underbrace{86 + 2\cdot 81}_{\text{\tiny }\mathfrak e_6\oplus\mathfrak{su}(3)} = "
+              r"\underbrace{120 + 128}_{\text{\tiny }\mathfrak{so}(16)} = "
+              r"\underbrace{28 + 28 + 3\cdot 64 }_{\text{\tiny magic square}} = 248",
+              ["86 + 2 x 81 = 120 + 128 = 28 + 28 + 3 x 64 = 248 (each decomposition also checked from the roots of E8 in "
+               "models/chirality_lisi.py)"])
+    if not (86 + 2 * 81 == 120 + 128 == 28 + 28 + 3 * 64 == 248):
+        raise ConciseError("the three decompositions of E8 differ")
+    for a, b in CHIRALITY_ARROWS:
+        d.arrow_row(a, b)
+    cap = ("Lie algebras, chirality and the Standard Model. Each identity row is one quantity stated by several "
+           "library equations, checked equal in one concrete case written under its name; the last identity "
+           "counts $E_8$ three ways, each decomposition rebuilt from the roots in the companion model. The "
+           "arrows are links of the library, not equations: the dimensions of $\\mathfrak{so}(n)$ and "
+           "$\\mathfrak{su}(N)$ agree at $\\mathfrak{su}(2)=\\mathfrak{so}(3)$ and $\\mathfrak{su}(4)=\\mathfrak{so}(6)$ "
+           "and by coincidence elsewhere, and the dimension count for three generations "
+           "($W=4\\cdot15\\cdot3=180$ against the $128$ of an eigenspace) bounds the generation count from a "
+           "different side than the net chiral class does.")
+    return d, _figure("fig:chirality", d.tex(), cap, 0.98)
+
+
 def transmutation_bridge() -> list[str]:
     """Check that the O(N) slope and the Yang-Mills lattice scale correspond.
 
@@ -391,6 +453,7 @@ def write(out_dir: Path, eqs) -> list[Path]:
     phys, ftex = physics_figure()
     geo, gtex = geometry_figure()
     tra, ttex = transmutation_figure()
+    chi, ctex = chirality_figure()
 
     lines = ["% Generated by sympy_models/concise.py. Do not edit by hand.\n"]
     lines.append("\\section{The library, conjoined}\\label{sec:physics}\n"
@@ -412,13 +475,20 @@ def write(out_dir: Path, eqs) -> list[Path]:
                  "arrow, not an equals sign, between the two. "
                  "The equations are " + _names_line(tra.names) + ".\n")
     lines.append(ttex)
+    lines.append("\\section{Lie algebras and chirality}\\label{sec:chirality}\n"
+                 "The companion repository of the chirality theorem puts the Standard Model in the $27$ of "
+                 "$E_6$ inside $E_8$. Figure~\\ref{fig:chirality} equates what the library states about the "
+                 "half-spinor, the generation count, the fifteen Weyl fields and the hypercharge, each "
+                 "in one concrete case, and draws the links between dimension counts that are not equalities. "
+                 "The equations are " + _names_line(chi.names) + ".\n")
+    lines.append(ctex)
     sel, cited = selected_section(by_key)
     lines.append("\\section{Selected results}\\label{sec:selected}\n"
                  "The registered models behind the figures; each is a sympy expression whose checks "
                  "passed in the full equations document.\n" + sel)
 
     keys = {"rosettamath"} | cited
-    for d in (phys, geo, tra):
+    for d in (phys, geo, tra, chi):
         for n in d.equations:
             ref = kb.reference_for_source(kb.equation(n).source)
             if ref:
@@ -427,6 +497,6 @@ def write(out_dir: Path, eqs) -> list[Path]:
     bib = out_dir / "concise_bibliography.tex"
     body.write_text("\n".join(lines), encoding="utf-8")
     bib.write_text(kbdoc.bibliography(keys), encoding="utf-8")
-    total = sum(len(d.checks) for d in (phys, geo, tra))
-    print(f"concise: {len(phys.equations | geo.equations | tra.equations)} library equations, {total} checks passed")
+    total = sum(len(d.checks) for d in (phys, geo, tra, chi))
+    print(f"concise: {len(phys.equations | geo.equations | tra.equations | chi.equations)} library equations, {total} checks passed")
     return [body, bib]

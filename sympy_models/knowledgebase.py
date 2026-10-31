@@ -524,6 +524,7 @@ ROSETTAMATH = {
 # Pseudo-entries: groups of equations that belong to no CONTENTS entry but to a companion note.
 PSEUDO_ENTRIES = {   # key -> (short label for tables, section title)
     "spectre-chair44": ("SC", "The Spectre, Chair44 and the clock tests (companion notes)"),
+    "chirality-lisi": ("CL", "Chirality, E8 and Lisi's triality (companion repository)"),
 }
 
 # References outside the OpenAI release, as the fork's notes cite them (SPECTRE_CHAIR44.md, "Citation key").
@@ -548,6 +549,21 @@ EXTERNAL = {
         title="Matching Rules for a Three-Dimensional Strongly Aperiodic Monotile",
         year=2026, url="https://arxiv.org/abs/2609.23783", note="arXiv:2609.23783v2, 30 Sep 2026.",
         status="arXiv preprint."),
+    "distler-garibaldi": dict(
+        tag="DG", entry="chirality-lisi", authors="J. Distler and S. Garibaldi",
+        title='There is no "Theory of Everything" inside E8',
+        year=2010, url="https://arxiv.org/abs/0905.2658", note="arXiv:0905.2658v3; Commun. Math. Phys. 298 (2010).",
+        status="Published; the companion repository reproduces only its root-system computations."),
+    "lisi-2026": dict(
+        tag="Lisi26", entry="chirality-lisi", authors="A. G. Lisi",
+        title="Division Algebras, Triality, and Exceptional Magic",
+        year=2026, url="https://arxiv.org/abs/2609.12112", note="arXiv:2609.12112v1; Adv. Appl. Clifford Algebras 36, 45 (2026).",
+        status="Read only in part by the companion repository (pages 1-11 and 25-44)."),
+    "lisi-2007": dict(
+        tag="Lisi07", entry="chirality-lisi", authors="A. G. Lisi",
+        title="An Exceptionally Simple Theory of Everything",
+        year=2007, url="https://arxiv.org/abs/0711.0770", note="arXiv:0711.0770.",
+        status="Background; not re-derived by the companion repository."),
     "spectre-sm": dict(
         tag="SM", entry="spectre-chair44", authors="D. Smith, J. S. Myers, C. S. Kaplan and C. Goodman-Strauss",
         title="A chiral aperiodic monotile", year=2023, url="https://arxiv.org/abs/2305.17743v2",
@@ -1129,6 +1145,15 @@ EXTRA_QUANTITIES = [
     ("chair inflation factor", "1", "The linear scale factor of the Chair44 substitution. Not the area factor of the Spectre.", "Substitution_tiling"),
     ("window dimension", "1", "The box dimension of the window of a cut-and-project description of a tiling.", "Fractal_dimension"),
     ("doubling defect", "1", "The extensivity defect of the log partition function when both sides of a rectangle are doubled.", "Transfer-matrix_method"),
+    ("vector representation dimension", "1", "The dimension n of the defining (vector) representation of so(n), and the number of generators of the Clifford algebra Cl(p,q) with p + q = n.", "Orthogonal_group"),
+    ("fundamental representation dimension", "1", "The dimension of the fundamental (defining) representation of one simple factor, such as the 27 of E6 or the 3 of SU(3), as against the representation of a product.", "Fundamental_representation"),
+    ("half-spinor dimension", "1", "The dimension of one of the two half-spinor (Weyl) representations of Spin(n), n even.", "Spin_representation"),
+    ("Clifford matrix size", "1", "The size s of the real or complex matrix algebra a Clifford algebra on an even number of generators is isomorphic to.", "Clifford_algebra"),
+    ("subalgebra root count", "1", "The number of roots of a semisimple subalgebra, as against the whole algebra.", "Root_system"),
+    ("electric charge number", "1", "The electric charge in units of the elementary charge: a number, 0, 1/3, 2/3, 1 and their negatives for one generation.", "Electric_charge"),
+    ("weak mixing parameter", "1", "sin squared of the weak mixing angle, the fraction g'^2/(g^2 + g'^2) of the hypercharge coupling in the photon.", "Weinberg_angle"),
+    ("weight vector count", "1", "The number of linearly independent weight vectors a set of fermions needs inside a representation.", "Weight_(representation_theory)"),
+    ("Weyl fields per generation", "1", "The number of left-handed Weyl fields in one Standard Model generation without a right-handed neutrino: 15.", "Standard_Model"),
     ("tree branching number", "1", "The mean number of children in a tree on which a noisy signal is broadcast.", "Galton%E2%80%93Watson_process"),
     ("channel eigenvalue", "1", "The second eigenvalue of the symmetric noise channel; 1 is no noise.", "Stochastic_matrix"),
     ("within-community degree", "1", "The mean number of neighbours a vertex has in its own community (a of the block model).", "Stochastic_block_model"),
@@ -1166,6 +1191,55 @@ EXTRA_EQUATIONS = [
      _FORK + "SPECTRE_CLOCK_AND_CHAIR44.md section 4, from [E229] abstract", "Stochastic_block_model",
      "The same line written for a three-community block model: detection is possible when (a - b)^2 > 3 (a + 2 b)."),
 ]
+_CHI = "brentharts/chirality-standard-model: "
+EXTRA_EQUATIONS += [
+    ("Orthogonal algebra dimension", "Lie algebras and chirality", r"D = \frac{n (n - 1)}{2}",
+     _CHI + "lisi/spin113.py; lisi/THEORY.md section 3", "Orthogonal_group",
+     "The dimension of so(n): the antisymmetric n by n matrices. With n = 8 it is 28, the triality algebra of the "
+     "octonions and the D4 of E8; with 10, the 45 of the Standard Model's SO(10); with 14, the 91 of spin(11,3); "
+     "with 16, the 120 that sits inside E8."),
+    ("Half-spinor dimension", "Lie algebras and chirality", r"S = 2^{n/2 - 1}",
+     _CHI + "lisi/THEORY.md sections 2, 3 and 5", "Spin_representation",
+     "Spin(n) for even n has two half-spinor representations of dimension 2^(n/2 - 1): 8 for n = 8 (the 8s and 8c "
+     "of triality), 16 for n = 10 (a generation), 32 for n = 12, 64 for n = 14 (Lisi's model) and 128 for n = 16."),
+    ("E6 fundamental branching", "Lie algebras and chirality", r"D_{f} = 1 + S + n",
+     _CHI + "lisi/THEORY.md section 2; lisi/sm_charges.py", "E6_(mathematics)",
+     "The 27 of E6 under SO(10) times U(1) is the singlet, a half-spinor and the vector: 27 = 1 + 16 + 10 at n = 10, "
+     "where the 16 is one generation with a right-handed neutrino and the 10 is vector-like. The same shape at "
+     "n = 8 would be 17, not a representation of anything exceptional; the count is for the SO(10) case."),
+    ("Triality block roots", "Lie algebras and chirality", r"R = R_{a} + R_{b} + 3 D_{a} D_{b}",
+     _CHI + "lisi/check_triality_d4d4.py; lisi/THEORY.md section 1", "Triality",
+     "E8 over D4 times D4: 240 roots are the 24 of each D4 and three blocks of 8 times 8, one for each of the "
+     "representations 8v, 8s, 8c that triality permutes. It is the root count of the magic square's corner, "
+     "where the same 3 a b appears in the dimension."),
+    ("Gell-Mann-Nishijima formula", "Standard Model", r"Q = T_{3} + Y",
+     _CHI + "lisi/THEORY.md section 2; lisi/sm_charges.py", "Gell-Mann%E2%80%93Nishijima_formula",
+     "The electric charge of a state is its third component of weak isospin plus its hypercharge. With Y = q/6 "
+     "this gives 0, +-1/3, +-2/3, +-1 over the 16, and the sums of Q and Q^3 over the 16 vanish."),
+    ("Weak mixing at unification", "Standard Model", r"s_{W} = \frac{1}{1 + k}",
+     _CHI + "lisi/sm_charges.py (the traces over the 16)", "Weinberg_angle",
+     "If g^2 times the trace of T3 squared equals g'^2 times the trace of Y squared at the unification scale, then "
+     "sin squared of the weak mixing angle is 1 / (1 + k) with k their ratio. Over one generation k = 5/3 and "
+     "s_W = 3/8, the SU(5) value at the unification scale; it runs to about 0.23 at low energy."),
+    ("Weight vector demand", "Lie algebras and chirality", r"W = 4 F N_{gen}",
+     _CHI + "lisi/THEORY.md section 8 (Distler-Garibaldi section 3)", "Weight_(representation_theory)",
+     "The dimension no-go: three generations of 15 Weyl fields need 2 x 2 x 45 = 180 linearly independent weight "
+     "vectors, and the larger eigenspace of an inner involution of E8 has dimension 128. The factor 2 x 2 is as "
+     "THEORY.md states it. The count assumes the generations are linearly independent, which Lisi's model denies."),
+    ("Standard Model content of the 27", "Lie algebras and chirality", r"D_{f} = F + 12",
+     _CHI + "lisi/THEORY.md section 2; paper/paper.tex section 4", "E6_(mathematics)",
+     "27 = 15 + 10 + 2: the fifteen Weyl fields of the Standard Model, the vector-like 5 + 5bar and two singlets "
+     "(the right-handed neutrino and the singlet of the 27). Three copies, as in 27 times 3, give 45 + 30 + 6 = 81: "
+     "three family modules, three vector-like pairs and six singlets."),
+    ("Clifford matrix size", "Lie algebras and chirality", r"s = 2^{n/2}",
+     _CHI + "lisi/spin113.py; lisi/THEORY.md section 3", "Clifford_algebra",
+     "The Clifford algebra on n generators, n even, is a full matrix algebra of size 2^(n/2): Cl(11,3) is the real "
+     "128 by 128 matrices."),
+    ("Chirality splitting", "Lie algebras and chirality", r"S = \frac{s}{2}",
+     _CHI + "lisi/spin113.py; lisi/THEORY.md section 3", "Spin_representation",
+     "The chirality element squares to one, so the 128 splits into two halves of 64: a half-spinor is half the "
+     "matrix size. With the half-spinor dimension 2^(n/2 - 1) this is the same 64 seen two ways."),
+]
 EXTRA_READINGS = {
     "Chair44 contact count": {"C": "contact count", "n": "hierarchy level"},
     "Chair44 contact defect": {"d": "contact defect", "n": "hierarchy level"},
@@ -1177,6 +1251,20 @@ EXTRA_READINGS = {
     "Reconstruction threshold": {"d": "tree branching number", "lambda": "channel eigenvalue"},
     "Community detection threshold": {"a": "within-community degree", "b": "between-community degree"},
 }
+EXTRA_READINGS.update({
+    "Orthogonal algebra dimension": {"D": "lie algebra dimension", "n": "vector representation dimension"},
+    "Half-spinor dimension": {"S": "half-spinor dimension", "n": "vector representation dimension"},
+    "E6 fundamental branching": {"D_f": "fundamental representation dimension", "S": "half-spinor dimension",
+                                 "n": "vector representation dimension"},
+    "Triality block roots": {"R": "root count", "R_a": "subalgebra root count", "R_b": "subalgebra root count",
+                             "D_a": "representation dimension", "D_b": "representation dimension"},
+    "Gell-Mann-Nishijima formula": {"Q": "electric charge number", "T_3": "weak isospin", "Y": "hypercharge"},
+    "Weak mixing at unification": {"s_W": "weak mixing parameter", "k": "hypercharge normalisation"},
+    "Weight vector demand": {"W": "weight vector count", "F": "Weyl fields per generation", "N_gen": "generation count"},
+    "Standard Model content of the 27": {"D_f": "fundamental representation dimension", "F": "Weyl fields per generation"},
+    "Clifford matrix size": {"s": "Clifford matrix size", "n": "vector representation dimension"},
+    "Chirality splitting": {"S": "half-spinor dimension", "s": "Clifford matrix size"},
+})
 EXTRA_LINKS = [
     ("Community detection threshold", "SPECIALISES", "Reconstruction threshold",
      "with d = (a + 2b)/3 and lambda = (a - b)/(a + 2b), d lambda^2 = (a - b)^2 / (3 (a + 2b))"),
@@ -1187,12 +1275,65 @@ EXTRA_LINKS = [
     ("Spectre inflation factor", "FIELD", "Chair44 inflation", "two substitution tilings, with an area factor and a length factor"),
     ("Spectre inflation factor", "FIELD", "Spectre window dimension", "the window dimension is a ratio of logarithms with the inflation factor in the denominator"),
 ]
+EXTRA_LINKS += [
+    ("Orthogonal algebra dimension", "FIELD", "Special unitary dimension",
+     "the two classical series of compact Lie algebras: n(n - 1)/2 generators for so(n), N^2 - 1 for su(N). They "
+     "coincide at (N, n) = (2, 3) and (4, 6), the isomorphisms su(2) = so(3) and su(4) = so(6) (the SU(4) of "
+     "Pati-Salam is the Spin(6) of SO(6)), and also at (11, 16), (23, 33) and (64, 91), which are numerical "
+     "coincidences and not isomorphisms. Neither formula says anything about the exceptional algebras"),
+    ("Orthogonal algebra dimension", "SPECIALISES", "Lie algebra dimension",
+     "for even n, so(n) has n(n - 2)/2 roots and rank n/2, and roots plus rank is n(n - 1)/2: so(8) is 24 + 4 = 28 "
+     "and so(14) is 84 + 7 = 91"),
+    ("Half-spinor dimension", "FIELD", "Adjoint branching",
+     "a half-spinor is also what completes so(16) to E8: 120 + 128 = 248, a second branching of the 248 besides "
+     "86 + 2 x 81 under E6 times SU(3), and the 128 is the n = 16 half-spinor"),
+    ("Half-spinor dimension", "DEFINES", "E6 fundamental branching",
+     "the 16 of the 27 = 1 + 16 + 10 is the n = 10 half-spinor"),
+    ("Triality block roots", "FIELD", "Magic square dimension",
+     "the three blocks of 8 times 8 of the root count are the 3 a b of the dimension: 240 = 24 + 24 + 3 x 64 against "
+     "248 = 28 + 28 + 3 x 64, the difference being the eight Cartan directions"),
+    ("Product representation dimension", "FIELD", "Standard Model content of the 27",
+     "the family module is 27 times 3 = 81, and each 27 is 15 + 10 + 2: three family modules of 15, three "
+     "vector-like pairs of 10 and six singlets, which is the paper's restriction along the Standard Model chain"),
+    ("Standard Model content of the 27", "FIELD", "E6 fundamental branching",
+     "the same 27 counted by the Standard Model fields (15 + 10 + 2) and by SO(10) (1 + 16 + 10): the 16 is the "
+     "15 and the right-handed neutrino, so the two counts agree"),
+    ("Standard Model content of the 27", "FIELD", "Weight vector demand",
+     "the fifteen Weyl fields per generation are the same 15 in both: the chirality theorem counts them in 27 times "
+     "3, the dimension no-go counts the weight vectors they need in an eigenspace of E8"),
+    ("Weight vector demand", "FIELD", "Net chiral class",
+     "two statements about three generations. The chirality theorem gets N_gen from the net chiral class of the "
+     "family module; the dimension no-go asks how many weight vectors N_gen generations need. They bound the "
+     "generation count from different sides and do not agree or disagree: the repository does not decide whether "
+     "linearly dependent generations evade the second"),
+    ("Clifford matrix size", "DEFINES", "Chirality splitting", "the half-spinor is half the matrix size"),
+    ("Chirality splitting", "FIELD", "Half-spinor dimension",
+     "the same half-spinor two ways: half of 2^(n/2) and 2^(n/2 - 1). For n = 14 both are 64, the Majorana-Weyl "
+     "64 of Lisi's model"),
+    ("Gell-Mann-Nishijima formula", "FIELD", "Hypercharge",
+     "the same hypercharge convention: Y = q/6 with q an integer, and Q = T3 + Y, so the electric charge is "
+     "T3 + q/6"),
+    ("Gell-Mann-Nishijima formula", "FIELD", "Anomaly-free hypercharge",
+     "the sums of Y and Y^3 over the sixteen vanish, and with Q = T3 + Y so do the sums of Q and Q^3"),
+    ("Hypercharge normalisation", "DEFINES", "Weak mixing at unification",
+     "k is the ratio of the two traces, and the weak mixing parameter at unification is 1/(1 + k)"),
+    ("Weak mixing at unification", "FIELD", "One-loop running",
+     "the unification boundary condition: sin squared is 3/8 at the unification scale and one-loop running of the "
+     "couplings carries it to its low-energy value. The library does not run it"),
+]
+
 EXTRA_ENTRY = {   # CONTENTS entry (or pseudo-entry) of an addition
     "Chair44 contact count": "spectre-chair44", "Chair44 contact defect": "spectre-chair44",
     "Chair44 boundary faces": "spectre-chair44", "Chair44 inflation": "spectre-chair44",
     "Spectre window dimension": "spectre-chair44",
     "Doubling defect": "215", "Doubling defect recursion": "215",
     "Reconstruction threshold": "229", "Community detection threshold": "229",
+    "Orthogonal algebra dimension": "chirality-lisi", "Half-spinor dimension": "chirality-lisi",
+    "E6 fundamental branching": "chirality-lisi",
+    "Triality block roots": "chirality-lisi", "Gell-Mann-Nishijima formula": "chirality-lisi",
+    "Weak mixing at unification": "chirality-lisi", "Weight vector demand": "chirality-lisi",
+    "Standard Model content of the 27": "chirality-lisi", "Clifford matrix size": "chirality-lisi",
+    "Chirality splitting": "chirality-lisi",
 }
 
 # --------------------------------------------------------------------------------------
