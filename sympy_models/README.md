@@ -88,7 +88,7 @@ prose, a display equation and the checks that passed (a failed check raises), an
 
 ```sh
 python3 sympy_models/explore/su_so.py          # one script
-python3 sympy_models/explore/__init__.py        # all six
+python3 sympy_models/explore/__init__.py        # all eight
 ```
 
 `concise.py` runs all of them and prints their results in the concise document's section "Explorations".
@@ -100,6 +100,8 @@ python3 sympy_models/explore/__init__.py        # all six
 | `e8_gradings.py` | which gradings of E8 by one simple root reproduce the repository's Z3 x Z3 table? | scan of all 8 nodes and moduli 2 to 6; the pair (7, 1) exactly, three more pairs in a different arrangement |
 | `generation_bound.py` | how many generations fit in an eigenspace? | 4 F N_gen <= 128: two at most; 4 x 16 = 64 = S(14) and 3 x 64 = 192 (an observation about numbers) |
 | `weak_mixing.py` | sin^2 = 3/8 at unification, run down | one-loop, from the library's running law: 0.208 (SM), 0.231 (MSSM), measured 0.2312 |
+| `hat_golden.py` | why is the hat expansion ratio phi^4? | charpoly (x^2-1)(x^2-7x+1), spectrum {1,-1,phi^4,phi^-4}, tr M^n = 1+(-1)^n+L_4n; N_u/N_r = kappa because the unreflected-hat vector is the H row of M; Spectre unit 4+sqrt15 is not golden; f_H = 1/3 is rational (a CICY docstring says all frequencies are irrational) |
+| `ym_mass_gap.py` | where would a Yang-Mills mass gap sit? | two-loop exponent -51/121 for all N; E_gap = c hbar c Lambda_L iff m_L/(a Lambda_L) -> c; blocking drift 2 b0 ln L vs the O(3) ln L/2pi (a correspondence); one-loop Lambda ~ 0.09 GeV. Proves nothing about the gap |
 | `kb_paths.py` | what chains join different repositories' results? | shortest chains over mathematical edges (never through where an equation was published, never through pi) |
 
 `explore/_roots.py` builds the root systems of A, D, E6, E7 and E8 from their Dynkin diagrams.
@@ -159,3 +161,6 @@ Notes from reading the sources:
 - Display forms are kept symbolic (for example `b_0`, `b_1` instead of their numeric values) so the LaTeX stays readable. Checks run on the substituted form, and a check ties the two together.
 - sympy chooses the LaTeX layout. Rearrange in the document if you want a different presentation.
 - A `repo-doc` equation is only as reliable as the note it came from.
+
+
+The concise paper (`concise_document.tex`) now has a dedicated section for `hat_golden` and for `ym_mass_gap`, a conclusion, and omits the knowledge-graph internals (`kb_paths` still runs in the build).

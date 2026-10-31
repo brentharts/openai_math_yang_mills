@@ -15,35 +15,36 @@
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=green!40!black,urlcolor=blue!60!black]{hyperref}
 \usepackage{orcidlink}
 \hypersetup{pdfauthor={Brent Hartshorn and Tristan Romanov},
-  pdftitle={Conjoined equations: a checked knowledge graph from the OpenAI math release to E8 and the Standard Model}}
+  pdftitle={The Golden Hat and the Gauge Gap: checked equations from aperiodic tilings, Yang-Mills scaling and E8}}
 \urlstyle{same}
 \makeatletter\def\UrlBreaks{\do\/\do\-\do\.\do\_}\makeatother
 \Urlmuskip=0mu plus 2mu
 \allowdisplaybreaks
 
-\title{Conjoined Equations:\\ a Sympy-Checked Knowledge Graph from the\\ OpenAI Math Release to $E_8$ and the Standard Model}
+\title{The Golden Hat and the Gauge Gap:\\ Checked Equations from Aperiodic Tilings, Yang--Mills Scaling\\ and $E_8$}
 \author{Brent Hartshorn \orcidlink{0009-0004-2853-655X}
         and Tristan Romanov}
 \date{}
 
-\input{build/concise_numbers.tex}   % generated: \nEq, \nQty, \nChecks, ...
+\input{build/concise_numbers.tex}   % generated: \nChecks, ...
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
 \noindent
-Equations that state one quantity can be set equal once each is solved for it, provided every letter has first
-been read as the quantity it denotes. We build a knowledge graph of \nEq{} equations and \nQty{} quantities in the
-manner of RosettaMath~\cite{rosettamath}, extended with models of the OpenAI math release, of the Spectre and
-Chair44 tilings, and of the chirality--$E_8$ repository, and draw its rows as large displays. Every term of every
-row is substituted back into its source equation and every number is checked in sympy: \nChecks{} checks over
-\nRegEq{} registered equations pass in the build. Correspondences between different theories, such as the $O(N)$
-model and Yang--Mills, or the chirality theorem's family $3$ and Lisi's triality $3$, are drawn as arrows and never
-as equalities. \nExplore{} exploration scripts then test the connections the graph suggests: the coincidences
-of $\mathfrak{su}(N)$ with $\mathfrak{so}(n)$, the orthogonal-plus-spinor pattern of the exceptional algebras, the
-gradings of $E_8$, how many generations a weight-vector count allows, and the weak mixing angle run from $3/8$ to
-the $Z$ mass. This is fork-level material, not an official OpenAI document.
+We join equations from the OpenAI math release and its companion repositories by reading each letter as the
+quantity it denotes, solving for that quantity and checking the result in sympy (\nChecks{} checks pass in the build).
+Three threads follow. (i)~The hat monotile's inflation factor is $\varphi^4$, and so is the ratio of unreflected to
+reflected hats: the first follows from the characteristic polynomial $(x^2-1)(x^2-7x+1)$ of the four-metatile
+substitution, whose spectrum is $\{1,-1,\varphi^4,\varphi^{-4}\}$; the second because the unreflected-hat counts are the
+$H$ row of that matrix. The Spectre's inflation $4+\sqrt{15}$ is not a power of $\varphi$, and only its perimeter growth
+$2+\sqrt5=\varphi^3$ is golden. (ii)~For Yang--Mills we do not claim a mass gap, which the release does not contain;
+we state the chain a gap must satisfy, a coupling-independent $E_{\mathrm{gap}}=c\,\hbar c\Lambda_L$ with
+$c=\lim m_L/(a\Lambda_L)$, check its consistency with two-loop scaling, and keep the analogy with $O(N)$ lattice
+models a correspondence, never an identity. (iii)~The $E_8$ decompositions behind the chirality theorem are rebuilt from
+the Cartan matrix and tied to the Standard Model's $16$, to $\sin^2\theta_W=3/8$ and to a weight count that does not
+admit three generations in $128$ weights. This is fork-level material, not an official OpenAI document.
 \end{abstract}
 
 \input{build/concise_body.tex}

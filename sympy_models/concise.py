@@ -470,55 +470,76 @@ def introduction(nums: dict, figure_checks: int) -> str:
     return (
         "\\section{Introduction}\\label{sec:intro}\n"
         "An equation states a relation between quantities, but it is written in letters, and a letter is not a "
-        "quantity: $E$ is the energy in $E=mc^2$ and the electric field in another equation, $k$ is a wavenumber, "
-        "a spring constant or the Boltzmann constant. Two equations can be compared only after each letter has been "
-        "read as the quantity it denotes. RosettaMath~\\cite{rosettamath} makes that reading explicit: every "
-        "equation carries a table of readings, equations that agree about a quantity can be solved for it and set "
-        "equal, and a quantity stated by several equations becomes one row of a large display, with the equations "
-        "underbraced beneath their terms.\n\n"
-        f"This paper applies that method to the physics and geometry of the OpenAI math release and of the fork's "
-        f"companion repositories, with sympy doing the algebra. The knowledge graph holds \\nEq{{}} equations and "
-        f"\\nQty{{}} quantities, joined by \\nLinks{{}} stated links; it yields \\nJoins{{}} pairwise joins and "
-        f"\\nFamilies{{}} families of at least two equations. The registered models (\\nModels{{}} modules, "
-        f"\\nRegEq{{}} equations) pass \\nChecks{{}} checks, and the figures below pass {figure_checks} more. "
-        "The contributions are these.\n"
+        "quantity: $E$ is the energy in $E=mc^2$ and the electric field in another equation. Two equations can be "
+        "compared only after each letter has been read as the quantity it denotes. RosettaMath~\\cite{rosettamath} "
+        "makes that reading explicit, so that equations stating one quantity can be solved for it and set equal in a "
+        "single large display. We apply the method, with sympy doing the algebra, to the physics and geometry of the "
+        "OpenAI math release and of the fork's companion repositories, and use the result to ask three questions.\n"
         "\\begin{itemize}\\itemsep2pt\n"
-        "\\item \\textbf{Rows that are checked, not asserted.} Every term of a row is the library equation solved for "
-        "the row's quantity, and the build substitutes it back into that equation and demands an identity; rows of "
-        "numbers are checked equal under the stated values. A failed check stops the build.\n"
-        "\\item \\textbf{Identity and correspondence kept apart.} The $O(N)$ spin model and Yang--Mills share a "
-        "shape, not a theory, so Figure~\\ref{fig:transmutation} joins them by an arrow taken from the library's own "
-        "link; the Spectre's and the hat's inflation factors are never equated; and the chirality theorem's "
-        "family $3$ and Lisi's triality $3$ are drawn as different symmetries.\n"
-        "\\item \\textbf{E8 rebuilt from its Cartan matrix.} The chirality repository's decompositions "
-        "($E_6\\times A_2$, $D_4\\times D_4$, $D_7\\times U(1)$, the two involutions, and the $\\mathbb Z_3\\times"
-        "\\mathbb Z_3$ table) are reproduced from the roots, not copied, and tied to the Standard Model's $16$, "
-        "to $\\sin^2\\theta_W=3/8$ and to a dimension count for three generations (Section~\\ref{sec:chirality}).\n"
-        "\\item \\textbf{Explorations.} \\nExplore{} scripts, with \\nExploreChecks{} checks, test connections the "
-        "graph suggests (Section~\\ref{sec:explore}): where $\\mathfrak{su}(N)$ and $\\mathfrak{so}(n)$ have equal "
-        "dimension, which orthogonal-plus-spinor sums are exceptional, which gradings of $E_8$ reproduce the "
-        "repository's table, how many generations fit, the weak mixing angle run to $M_Z$, and chains between "
-        "islands of the graph.\n"
+        "\\item \\textbf{Why is the hat's expansion ratio $\\varphi^4$?} Romanov's observation, that the hat "
+        "inflation factor equals the fourth power of the golden ratio, and that the same number is the ratio of "
+        "unreflected to reflected hats, is traced to its algebra and to a relation between two tables of the "
+        "substitution (Section~\\ref{sec:hat}). The Spectre, by contrast, is not golden.\n"
+        "\\item \\textbf{Where would a Yang--Mills mass gap sit?} The release contains no gauge-theory result, so we "
+        "do not prove one. We write down the chain a gap would have to satisfy, check its consistency, and keep the "
+        "$O(N)$ analogy as a correspondence (Section~\\ref{sec:ym}).\n"
+        "\\item \\textbf{What does $E_8$ say about the Standard Model's matter?} The chirality repository's "
+        "decompositions are rebuilt from the Cartan matrix and tied to the $16$, to $\\sin^2\\theta_W=3/8$ and to a "
+        "dimension count for generations (Sections~\\ref{sec:chirality} and~\\ref{sec:explore}).\n"
         "\\end{itemize}\n"
-        "What is not claimed matters as much. The checks test that stated formulas agree with one another and with "
-        "independent computation; they do not re-prove any theorem of the release, and they cannot see real forms "
-        "or signatures. A join is a conjecture about two equations, true when the letters are read as stated; a "
-        "chain in the graph is a place to look. Section~\\ref{sec:physics} gives the physics rows, "
-        "Section~\\ref{sec:geometry} the geometry, Section~\\ref{sec:transmutation} transmutation, "
-        "Section~\\ref{sec:chirality} Lie algebras and chirality, Section~\\ref{sec:explore} the explorations and "
-        "Section~\\ref{sec:selected} the registered results behind them.\n")
+        "Every term of every displayed row is the source equation solved for the row's quantity, substituted back and "
+        "required to give an identity, and every number is checked; \\nChecks{} checks over the registered models and "
+        f"{figure_checks + nums['nExploreChecks']} more over the figures and explorations pass in the build, and a failure stops it. "
+        "The checks test that stated formulas agree with one another and with independent computation; they do not "
+        "re-prove any theorem of the release. Identities are kept apart from correspondences, which are drawn as "
+        "arrows (Section~\\ref{sec:physics}).\n")
+
+
+DEDICATED = ("hat_golden", "ym_mass_gap")        # get sections of their own
+OMITTED = ("kb_paths",)                          # graph internals: run by the build, not described in the paper
+
+
+def dedicated_section(x, label: str, title: str, lead: str, tail: str) -> str:
+    return (f"\\section{{{title}}}\\label{{{label}}}\n{lead}\n\n{x.prose}\n\n"
+            f"\\begin{{equation}}\\label{{eq:explore-{x.name}}}\n  {x.display}\n\\end{{equation}}\n\n{tail}\n"
+            f"\\noindent\\textit{{{len(x.checks)} checks passed (\\texttt{{explore/{esc(x.name)}.py}}).}}\n")
 
 
 def explorations_section(explored) -> str:
-    parts = ["\\section{Explorations}\\label{sec:explore}\n"
+    parts = ["\\section{Further explorations}\\label{sec:explore}\n"
              "Each subsection is a script in \\texttt{sympy\\_models/explore/}, run by the build; its checks are "
-             "listed in the script's own output (\\texttt{python3 sympy\\_models/explore/<name>.py}).\n"]
+             "listed in the script's own output.\n"]
     for x in explored:
+        if x.name in DEDICATED or x.name in OMITTED:
+            continue
         parts.append(f"\\subsection*{{{x.title.replace('&', chr(92) + '&')}}}\n{x.prose}\n")
         if x.display:
             parts.append(f"\\begin{{equation}}\\label{{eq:explore-{x.name}}}\n  {x.display}\n\\end{{equation}}\n")
         parts.append(f"\\noindent\\textit{{{len(x.checks)} checks passed (\\texttt{{explore/{esc(x.name)}.py}}).}}\n")
     return "\n".join(parts)
+
+
+def conclusion() -> str:
+    return (
+        "\\section{Conclusion}\\label{sec:conclusion}\n"
+        "Romanov's surprise has an answer at the level of algebra. The hat's substitution has spectrum "
+        "$\\{1,-1,\\varphi^4,\\varphi^{-4}\\}$, because $x^2-7x+1$ is the minimal polynomial of $\\varphi^4$ and $7$ is a "
+        "Lucas number; the linear scale is $\\varphi^2$; and the chirality ratio equals the inflation factor because the "
+        "unreflected hats of a metatile are counted by the $H$ row of the substitution while the one reflected hat sits in "
+        "each $H$. What remains unexplained is geometric: why the hat's substitution has these entries. The Spectre's "
+        "$4+\\sqrt{15}$ is not golden, and the golden $2+\\sqrt5=\\varphi^3$ of its perimeter is a separate fact; sharing "
+        "$\\mathbb{Q}(\\sqrt5)$ is not a link between them.\n\n"
+        "For Yang--Mills we have a frame and not a result. A coupling-independent physical gap is the statement that "
+        "$m_L/(a\\Lambda_L)$ tends to a constant, the gap is that constant times $\\Lambda_L$, and its positivity is the "
+        "open problem. The proved two-dimensional gap and the $O(N)$ asymptotics share the linear drift of the "
+        "coupling under blocking, and we have kept them as a correspondence. For $E_8$ the checks confirm the "
+        "decompositions behind the chirality theorem, show that a weight-vector count does not fit three generations "
+        "in $128$ weights, and reproduce $\\sin^2\\theta_W=3/8$ at unification.\n\n"
+        "Three limits apply throughout. The checks test internal consistency, not the truth of cited theorems; "
+        "several inputs are quoted from repositories, not derived; and the one-loop numbers are illustrations. The "
+        "natural next steps are a geometric derivation of the hat's substitution entries from its tile, a check of "
+        "whether the Spectre's boundary operator has a closed form, and, if the expert group's Yang--Mills write-up "
+        "appears, a comparison of its statements with the chain of Section~\\ref{sec:ym}.\n")
 
 
 def write(out_dir: Path, eqs) -> list[Path]:
@@ -548,6 +569,18 @@ def write(out_dir: Path, eqs) -> list[Path]:
                  "equal in sympy, not only solved for. The equations are "
                  + _names_line(geo.names) + ".\n")
     lines.append(gtex)
+    byname = {x.name: x for x in explored}
+    lines.append(dedicated_section(
+        byname["hat_golden"], "sec:hat", "The golden hat",
+        "Of the two inflation factors in Figure~\\ref{fig:geometry}, the hat's is the surprising one: it is a power of "
+        "the golden ratio, a number the Penrose tilings made familiar, in a tiling that has nothing else of Penrose's. "
+        "We take the four-metatile substitution $M$ of the hat (quoted from the CICY repository) and derive what follows "
+        "from it exactly.",
+        "Two things stay open. First, the entries of $M$ and the hat counts are quoted, and the equality of the "
+        "unreflected-hat vector with the $H$ row is a relation we verify but do not explain geometrically. Second, one "
+        "published statement is too strong: the Perron frequencies are not all irrational, since $f_H=1/3$ exactly; "
+        "the frequencies of $T$, $P$ and $F$ lie in $\\mathbb{Q}(\\sqrt5)\\setminus\\mathbb{Q}$, and one irrational "
+        "frequency is already enough to forbid a period."))
     lines.append("\\section{Transmutation}\\label{sec:transmutation}\n"
                  "The mass gap of a spin model and the lattice scale of a gauge theory both fall as "
                  "$\\exp(-\\mathrm{slope}\\cdot\\beta)$, but they belong to different theories. "
@@ -555,6 +588,17 @@ def write(out_dir: Path, eqs) -> list[Path]:
                  "arrow, not an equals sign, between the two. "
                  "The equations are " + _names_line(tra.names) + ".\n")
     lines.append(ttex)
+    lines.append(dedicated_section(
+        byname["ym_mass_gap"], "sec:ym", "The Yang--Mills mass gap",
+        "The Clay problem asks for a quantum $SU(N)$ Yang--Mills theory on $\\mathbb{R}^4$ whose spectrum has a gap. "
+        "No manuscript of the release treats a gauge theory, and reports of a four-dimensional existence claim "
+        "mention no mass gap, so this section proves nothing about it. It asks what the library can state and check "
+        "around it.",
+        "What is established, then, is the textbook scaling, the consistency condition, and the proved two-dimensional "
+        "analogues: a positive gap for the $O(3)$ lattice model, and exact asymptotics of the mass for $O(4)$. What is not "
+        "is the existence of the limit $c=\\lim m_L/(a\\Lambda_L)$ for a gauge theory, its positivity, and any "
+        "implication from the $O(N)$ results to $SU(N)$; the shared linear drift is a reason to look, not evidence of a "
+        "theorem."))
     lines.append("\\section{Lie algebras and chirality}\\label{sec:chirality}\n"
                  "The companion repository of the chirality theorem puts the Standard Model in the $27$ of "
                  "$E_6$ inside $E_8$. Figure~\\ref{fig:chirality} equates what the library states about the "
@@ -563,8 +607,9 @@ def write(out_dir: Path, eqs) -> list[Path]:
                  "The equations are " + _names_line(chi.names) + ".\n")
     lines.append(ctex)
     lines.append(explorations_section(explored))
+    lines.append(conclusion())
     sel, cited = selected_section(by_key)
-    lines.append("\\section{Selected results}\\label{sec:selected}\n"
+    lines.append("\\appendix\n\\section{Registered results}\\label{sec:selected}\n"
                  "The registered models behind the figures; each is a sympy expression whose checks "
                  "passed in the full equations document.\n" + sel)
 
