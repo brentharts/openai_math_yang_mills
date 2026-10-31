@@ -529,6 +529,7 @@ PSEUDO_ENTRIES = {   # key -> (short label for tables, section title)
     "hopf-insulator": ("HI", "The three-dimensional Hopf insulator (companion repository)"),
     "cicy-gauge": ("CG", "Gluon amplitudes and gauge-coupling running (companion repository CICY)"),
     "forest-gauge": ("FG", "Strong-coupling lattice gauge theory in a forest gauge (companion repository)"),
+    "formal-gauge": ("FM", "Machine-checked and rigorous lattice gauge theory: companion programmes and references (links only)"),
     "su2-lattice-gap": ("SU", "Exactly computable SU(2) lattice gauge theories: a 2D string tension, a one-plaquette gap and a two-plaquette ladder (fork)"),
 }
 
@@ -594,6 +595,15 @@ EXTERNAL = {
         title="An Exceptionally Simple Theory of Everything",
         year=2007, url="https://arxiv.org/abs/0711.0770", note="arXiv:0711.0770.",
         status="Background; not re-derived by the companion repository."),
+    "dhmn-2026": dict(
+        tag="DHMN", entry="formal-gauge", authors="M. R. Douglas, S. Hoback, A. Mei and R. Nissim",
+        title="Formalization of QFT",
+        year=2026, url="https://arxiv.org/abs/2603.15770",
+        note="arXiv:2603.15770v1, 16 Mar 2026 (hep-th, cs.LO, math-ph, math.MP). Per its abstract: the free bosonic "
+             "QFT in four-dimensional Euclidean spacetime, built and shown to satisfy the Glimm-Jaffe axioms in "
+             "Lean 4, with AI coding assistants. Summarised from the arXiv abstract page only; the paper has not "
+             "been read in full by the fork.",
+        status="arXiv preprint; not peer reviewed as far as the fork knows."),
     "spectre-sm": dict(
         tag="SM", entry="spectre-chair44", authors="D. Smith, J. S. Myers, C. S. Kaplan and C. Goodman-Strauss",
         title="A chiral aperiodic monotile", year=2023, url="https://arxiv.org/abs/2305.17743v2",
@@ -652,7 +662,7 @@ def references() -> dict[str, Reference]:
     for key, r in {**REFERENCES_DATA, "rosettamath": ROSETTAMATH}.items():
         title = r["title"] + (": " + r["subtitle"] if r.get("subtitle") else "")
         out[key] = Reference(key, r["authors"], title, r["year"], r["url"], "repository",
-                             note=r.get("note", ""), tag=r.get("tag", ""), repo=r["repo"])
+                             note=r.get("note", ""), tag=r.get("tag", ""), entry=r.get("entry", ""), repo=r["repo"])
     return out
 
 
@@ -756,7 +766,7 @@ class Library:
         for ref in references().values():
             g.add(Node("reference", ref.key, ref.title, {"reference": ref}))
             if ref.entry and g.get("entry", ref.entry) is None:
-                g.add(Node("entry", ref.entry, f"entry {ref.entry}"))
+                g.add(Node("entry", ref.entry, f"entry {ref.entry}" if ref.entry.isdigit() else PSEUDO_ENTRIES.get(ref.entry, ("", ref.entry))[1]))
         for ref in references().values():
             if ref.entry:
                 g.link(TREATS, g.get("entry", ref.entry), g.get("reference", ref.key), ref.tag)
@@ -4178,6 +4188,31 @@ REFERENCES_DATA = {'elsbernd2026': {'authors': 'Michael Elsbernd',
                     'note': 'MIT code, CC BY 4.0 text; the library rederives the combinatorics and the arithmetic and does '
                             'not copy the scripts. The certificate, the Lean kernel checks and the interval cover are '
                             'quoted, not rerun. A strong-coupling result at fixed lattice spacing, not the continuum limit.'},
+ 'eriksson2026': {'authors': 'L. Eriksson (THE ERIKSSON PROGRAMME repository)',
+                  'title': 'The Eriksson Programme: machine-checked lattice gauge theory in Lean 4',
+                  'subtitle': 'cluster expansions, Wilson-loop area laws and a hRpoly research branch',
+                  'year': 2026,
+                  'repo': 'lluiseriksson/THE-ERIKSSON-PROGRAMME',
+                  'tag': 'eriksson',
+                  'entry': 'formal-gauge',
+                  'url': 'https://github.com/lluiseriksson/THE-ERIKSSON-PROGRAMME',
+                  'manuscript': 'README.md',
+                  'note': 'AGPL-3.0; linked, not copied, and not rerun (the fork has not built the Lean). Its own '
+                          'scope: strong-coupling area laws and clustering recorded in the core; the physical '
+                          'activity bound hRpoly, the 4D continuum limit and reconstruction are open; no '
+                          'four-dimensional mass gap is claimed.'},
+ 'wilsonrg2026': {'authors': 'M. Peev and A. S. Dogra (4D_Wilson_Loop_RG repository, fork by brentharts)',
+                  'title': 'Wilson loops through the renormalisation group',
+                  'subtitle': 'first RG step, iteration and cutoff comparison for four-dimensional Yang-Mills',
+                  'year': 2026,
+                  'repo': 'brentharts/4D_Wilson_Loop_RG',
+                  'tag': 'wilsonrg',
+                  'entry': 'formal-gauge',
+                  'url': 'https://github.com/brentharts/4D_Wilson_Loop_RG',
+                  'manuscript': 'README.md',
+                  'note': 'CC0-1.0; documents generated with Claude and/or ChatGPT per its README, mostly '
+                          'unverified, with status graded by the authors. Nothing from it is used in the fork '
+                          'models. See WILSON_LOOP_RG.md.'},
  'quantumlattice2026': {'authors': 'B. S. Hartshorn (quantum-lattice repository)',
                         'title': 'Quantum Lattice: a PySide6 front end for tight-binding calculations',
                         'subtitle': 'with the three-dimensional Hopf insulator and its figures',
