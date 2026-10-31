@@ -3,6 +3,7 @@
 % This wrapper is hand-editable. It pulls in two generated fragments from build/:
 %     concise_body.tex            the figures and selected results, built by concise.py
 %     concise_bibliography.tex    the references cited there
+%     concise_numbers.tex         the counts quoted in the abstract and introduction (macros \nEq, \nChecks, ...)
 % Regenerate them, and build this file, with:
 %     python3 sympy_models/export.py --pdf
 \documentclass[10pt]{article}
@@ -14,28 +15,35 @@
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=green!40!black,urlcolor=blue!60!black]{hyperref}
 \usepackage{orcidlink}
 \hypersetup{pdfauthor={Brent Hartshorn and Tristan Romanov},
-  pdftitle={The physics and geometry of the OpenAI math release, conjoined}}
+  pdftitle={Conjoined equations: a checked knowledge graph from the OpenAI math release to E8 and the Standard Model}}
 \urlstyle{same}
 \makeatletter\def\UrlBreaks{\do\/\do\-\do\.\do\_}\makeatother
 \Urlmuskip=0mu plus 2mu
 \allowdisplaybreaks
 
-\title{The physics and geometry of the OpenAI math release,\\ conjoined by a knowledge graph}
+\title{Conjoined Equations:\\ a Sympy-Checked Knowledge Graph from the\\ OpenAI Math Release to $E_8$ and the Standard Model}
 \author{Brent Hartshorn \orcidlink{0009-0004-2853-655X}
         and Tristan Romanov}
 \date{}
+
+\input{build/concise_numbers.tex}   % generated: \nEq, \nQty, \nChecks, ...
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
 \noindent
-Equations that state one quantity are set equal after each is solved for it, and a row of such
-equalities is drawn as a single large display, in the manner of RosettaMath~\cite{rosettamath}.
-The rows are generated from a knowledge graph and checked in sympy: every term, substituted back
-into its source equation, gives an identity, and rows of numbers are checked equal. The companion
-document \texttt{equations\_document} gives the full equations, their sources and their checks.
-This is fork-level material, not an official OpenAI document.
+Equations that state one quantity can be set equal once each is solved for it, provided every letter has first
+been read as the quantity it denotes. We build a knowledge graph of \nEq{} equations and \nQty{} quantities in the
+manner of RosettaMath~\cite{rosettamath}, extended with models of the OpenAI math release, of the Spectre and
+Chair44 tilings, and of the chirality--$E_8$ repository, and draw its rows as large displays. Every term of every
+row is substituted back into its source equation and every number is checked in sympy: \nChecks{} checks over
+\nRegEq{} registered equations pass in the build. Correspondences between different theories, such as the $O(N)$
+model and Yang--Mills, or the chirality theorem's family $3$ and Lisi's triality $3$, are drawn as arrows and never
+as equalities. \nExplore{} exploration scripts then test the connections the graph suggests: the coincidences
+of $\mathfrak{su}(N)$ with $\mathfrak{so}(n)$, the orthogonal-plus-spinor pattern of the exceptional algebras, the
+gradings of $E_8$, how many generations a weight-vector count allows, and the weak mixing angle run from $3/8$ to
+the $Z$ mass. This is fork-level material, not an official OpenAI document.
 \end{abstract}
 
 \input{build/concise_body.tex}

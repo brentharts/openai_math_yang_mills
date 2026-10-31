@@ -81,6 +81,29 @@ nothing unverified is written. The pivots are named, not computed, because "ever
 a page and the two inflation factors only look alike. Change `PHYSICS_ROWS`, `GEOMETRY_ROWS`,
 `TRANSMUTATION_ROWS` and `SELECTED` in `concise.py` to choose what is shown.
 
+## Exploration scripts
+
+`explore/` holds scripts that test connections the knowledge graph suggests. Each defines `run()`, returns its
+prose, a display equation and the checks that passed (a failed check raises), and runs alone or all together:
+
+```sh
+python3 sympy_models/explore/su_so.py          # one script
+python3 sympy_models/explore/__init__.py        # all six
+```
+
+`concise.py` runs all of them and prints their results in the concise document's section "Explorations".
+
+| Script | Question | Result |
+| :--- | :--- | :--- |
+| `su_so.py` | where does dim su(N) = dim so(n)? | Pell equation (2n-1)^2 - 8N^2 = -7; only (2,3) and (4,6) are isomorphisms; S(10) = 2 S(6) S(4) = 16 is the Pati-Salam split |
+| `spinor_series.py` | which exceptional algebras are so(n) plus spinors? | F4 (n=9), E6 (n=10, with u(1) and two 16s), E7 (n=12, with su(2)), E8 (n=16); n=5 gives 14 = dim G2 by coincidence (checked against G2's closed subsystems) |
+| `e8_gradings.py` | which gradings of E8 by one simple root reproduce the repository's Z3 x Z3 table? | scan of all 8 nodes and moduli 2 to 6; the pair (7, 1) exactly, three more pairs in a different arrangement |
+| `generation_bound.py` | how many generations fit in an eigenspace? | 4 F N_gen <= 128: two at most; 4 x 16 = 64 = S(14) and 3 x 64 = 192 (an observation about numbers) |
+| `weak_mixing.py` | sin^2 = 3/8 at unification, run down | one-loop, from the library's running law: 0.208 (SM), 0.231 (MSSM), measured 0.2312 |
+| `kb_paths.py` | what chains join different repositories' results? | shortest chains over mathematical edges (never through where an equation was published, never through pi) |
+
+`explore/_roots.py` builds the root systems of A, D, E6, E7 and E8 from their Dynkin diagrams.
+
 ## Layout
 
 - [eqlib.py](eqlib.py): the `Equation` record, the registry, `check()` and the LaTeX block writer.
