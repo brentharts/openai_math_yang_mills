@@ -168,6 +168,8 @@ SELECTED = (
     ("The Chair44 and Spectre tilings", "spectre-chair44", ("chair44_contact_formula", "spectre_window_dimension")),
     ("E8, the family grading and the weak mixing angle", "chirality-lisi",
      ("cl_e8_gradings", "cl_z3_z3_table", "cl_weak_mixing")),
+    ("SO(10), SU(4) and the frame-Higgs 40 inside E8", "chirality-lisi",
+     ("cl_frame_higgs", "cl_so10_su4", "cl_su4_su3m")),
     ("Yang--Mills asymptotic freedom", "", ("ym_b0", "ym_lattice_scale", "ym_log_slope")),
     ("The Hopf fibration and the Hopf insulator", "hopf-fibration",
      ("hf_invariant", "hf_pq", "hi_trim_formula", "hg_bpst_c2")),
