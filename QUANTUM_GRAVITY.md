@@ -20,6 +20,10 @@ Reads the two-plaquette SU(2) lattice model (`sympy_models/models/su2_lattice_la
 
 - `models/su2_lattice_lshape.py` (L-shaped cluster with the four-valent corner vertex): phases pinned by a pointwise check against explicit tensor contraction (45 state-plaquette pairs). The strong-coupling estimate `<Q^2> = 1/(27 g^16)` is confirmed (ratio 0.9808, 0.9939, 0.99961, 0.999976 at g^2 = 3, 4, 8, 16). Not reached: the weak-coupling limit; the volume prefactor.
 
+## Fourth round
+- `sympy_models/models/forest_gauge_4d_theorems.py` (34 checks, `forest-gauge`): the finite statements of Bhattacharjee-Bhattacharya-Lockwood-Romanov (30 Oct 2026; pages 1-6 and Appendix A read, proofs not read): Table III line field, partner counts 12/14/18, Table I from root systems (17 groups) with Lichnerowicz (equality only for SU(2): the j = 1/2 Casimir), and the numbers of Theorems 1-7. Counted in the paper (new section "Gauge fixing and the curvature of the link"). One printed SU(3) value (0.0177) is 0.00004 above what the stated alpha_3 gives.
+- New reference `bbll-forest-4d`. The Zenodo record 10.5281/zenodo.23841532 could not be fetched (host not on the session allowlist), so it is not cited; attach the PDF or paste the abstract to add it.
+
 ## Limits
 Not a model of quantum gravity: fixed graph, gauge-theory Hamiltonian, no diffeomorphism invariance, volume only for one four-valent vertex. The all-spin Immirzi value (about 0.2375) is quoted from Domagala-Lewandowski, not rederived. References are cited by arXiv ID; the Kogut-Susskind DOI is unchecked. Title and author line are placeholders.
 
