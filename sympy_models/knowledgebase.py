@@ -670,6 +670,15 @@ EXTERNAL = {
         "whether ...316 is the concept record of the same deposit was not checked. Wilson SU(2) at strong coupling on Z^3 in a period-3 forest "
         "gauge: Dobrushin range beta_W < 4/7 and transfer-matrix gap m >= -log(7 beta_W/4); Hessian bound h = 9.599991.",
         status="Unrefereed; the paper says its Dobrushin result depends on unrefereed inputs."),
+    "bbll-forest-4d": dict(
+        tag="BBLR", entry="forest-gauge", authors="D. Bhattacharjee, U. Bhattacharya, J. M. Lockwood and T. Romanov",
+        title="Explicit Lattice Yang-Mills Mass Gap for Every Compact Simple Group Reducing the Continuum Gap to One Cube",
+        year=2026, url="https://github.com/creelie/4Y-M", 
+        note="Dated 30 October 2026; supplied to the fork as the file eb95ffa3-YangMillsForestGauge.pdf (98 pages), which gives its earlier version as the Hexagon "
+             "preprint 2610.00341v4 and its code and certificates as github.com/creelie/4Y-M, release v4.28.0. The fork read pages 1-6 and Appendix A and "
+             "rebuilt the finite statements in models/forest_gauge_4d_theorems.py; it did not read the proofs. Strong-coupling lattice results at fixed spacing; "
+             "the paper lists the cube condition, the slice ratio and the tree bounds as open.",
+        status="Unrefereed as far as the fork knows; the paper reports computer-assisted inputs and AI-assisted drafting."),
     "kogut-susskind-1975": dict(
         tag="KS", entry="spin-network-qg", authors="J. Kogut and L. Susskind",
         title="Hamiltonian formulation of Wilson's lattice gauge theories",
