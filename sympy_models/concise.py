@@ -172,7 +172,24 @@ SELECTED = (
      ("cl_frame_higgs", "cl_so10_su4", "cl_su4_su3m")),
     ("Yang--Mills asymptotic freedom", "", ("ym_b0", "ym_lattice_scale", "ym_log_slope")),
     ("The Hopf fibration and the Hopf insulator", "hopf-fibration",
-     ("hf_invariant", "hf_pq", "hi_trim_formula", "hg_bpst_c2")),
+     ("hf_invariant", "hf_pq", "hi_trim_formula"),
+     "These are exact symbolic checks of closed forms from two companion repositories. The classification of the "
+     "insulator and the identification of its invariant with a linking number are quoted, and the repositories' "
+     "numerical figures are not rerun. The insulator's gap is a band gap of a non-interacting lattice model."),
+    ("Tree-level gluon amplitudes", "cicy-gauge", ("ca_parke_taylor", "ca_soft", "ca_bcfw_analytic", "ca_kk_rank"),
+     "Exact rational checks of the colour-ordered MHV amplitude, from the CICY repository's twistor module "
+     "(reimplemented, not copied). These are tree-level, perturbative statements about gluon scattering; loops, "
+     "beyond-MHV amplitudes and the three-point sign conventions are not checked, and nothing here concerns "
+     "existence or a mass gap."),
+    ("One-loop gauge couplings", "cicy-gauge",
+     ("cu_one_loop_b", "cu_alpha3", "cu_generation_independence", "cu_vectorlike_sensitivity"),
+     "The one-loop coefficients derived from the field content, and what eliminating the unified coupling predicts. "
+     "The $SU(3)$ coefficient is the asymptotic-freedom number of Section~\\ref{sec:ym}; running at one loop is "
+     "perturbative and says nothing about a gap."),
+    ("The BPST instanton (textbook, classical)", "hopf-fibration", ("hg_bpst_c2",),
+     "A classical Euclidean $SU(2)$ solution whose second Chern number is a topological integer. It is standard "
+     "material, included because its boundary map is the three-sphere of the Hopf fibration, and it says nothing "
+     "about quantum Yang--Mills, existence or a mass gap (Section~\\ref{sec:ym})."),
 )
 
 
@@ -435,15 +452,34 @@ def transmutation_figure():
 # ---------------------------------------------------------------------------------------
 # the document
 # ---------------------------------------------------------------------------------------
+_MATH_TOKEN = re.compile(r"(\b\w+(?:_\{[^}]*\}|\^\{[^}]*\})|\b[A-Z]_[A-Z]+\b)")
+
+
+def esc_title(text: str) -> str:
+    """Escape a plain-text equation title for LaTeX, setting sub- and superscripted symbols (f_{p,q}, T^{3/2},
+    A_XY) in math mode instead of printing the braces."""
+    out = []
+    for i, piece in enumerate(_MATH_TOKEN.split(text)):
+        if i % 2 == 0:
+            out.append(esc(piece))
+        elif re.fullmatch(r"[A-Z]_[A-Z]+", piece):
+            out.append(f"${piece[0]}_{{\\mathrm{{{piece[2:]}}}}}$")
+        else:
+            out.append(f"${piece}$")
+    return "".join(out)
+
+
 def selected_section(eqs_by_key) -> tuple[str, set[str]]:
     parts, keys = [], set()
-    for title, entry, ekeys in SELECTED:
+    for title, entry, ekeys, *note in SELECTED:
         parts.append(f"\\subsection*{{{title}}}")
+        if note:
+            parts.append(note[0] + "\n")
         for k in ekeys:
             eq = eqs_by_key[k]
             cites = kb.citations_for(eq)
             keys.update(cites)
-            parts.append(f"\\noindent {esc(eq.title)}{cite(cites)}."
+            parts.append(f"\\noindent {esc_title(eq.title)}{cite(cites)}."
                          f"\n\\begin{{equation}}\\label{{ceq:{eq.key}}}\n  {eq.latex(multiline=True)}\n\\end{{equation}}")
             if eq.see:
                 parts.append(f"\\noindent\\textit{{See}} {render_see(eq.see)}.")
@@ -496,7 +532,8 @@ def introduction(nums: dict, figure_checks: int) -> str:
         f"{figure_checks + nums['nExploreChecks']} more over the figures and explorations pass in the build, and a failure stops it. "
         "The checks test that stated formulas agree with one another and with independent computation; they do not "
         "re-prove any theorem of the release. Identities are kept apart from correspondences, which are drawn as "
-        "arrows (Section~\\ref{sec:physics}).\n")
+        "arrows (Section~\\ref{sec:physics}). A short appendix (Section~\\ref{sec:selected}) adds checks of the Hopf "
+        "fibration, the Hopf insulator and the BPST instanton, which share the three-sphere and no theorem.\n")
 
 
 DEDICATED = ("hat_golden", "ym_mass_gap")        # get sections of their own
@@ -523,6 +560,30 @@ def explorations_section(explored) -> str:
     return "\n".join(parts)
 
 
+def pictures_section(n_checks: int) -> str:
+    return (
+        "\\section{Four pictures}\\label{sec:pictures}\n"
+        "The figures below are drawn from the registered models, not from the companion repositories' figure scripts, "
+        f"and every plotted number is asserted before it is drawn ({n_checks} checks, counted in the totals above). "
+        "Figure~\\ref{fig:hopf} shows the two exact structures of the Hopf material, the invariant as a signed count "
+        "over eight momenta and the section of the fibration; Figure~\\ref{fig:gauge} shows the one-loop running behind "
+        "the $SU(3)$ coefficient of Section~\\ref{sec:ym} and the classical instanton.\n\n"
+        "\\begin{figure}[!htbp]\\centering\n  \\includegraphics[width=\\linewidth]{build/fig_hopf.pdf}\n"
+        "  \\caption{The Hopf insulator and the Hopf fibration. (a)~The invariant $N_H$ of the insulator against the mass "
+        "parameter $h$, from the signed sum over the eight time-reversal-invariant momenta. The gap closes at the dashed "
+        "lines, where the sum jumps by $-1,+3,-3,+1$. (b)~The half-plane section of the fibration in the stereographic "
+        "picture: one circle per base latitude, from $20^\\circ$ (outer) to $160^\\circ$ (inner), each of centre "
+        "$(1/s,0)$ and radius $c/s$ with $s=\\sin(\\mathrm{el}/2)$, $c=\\cos(\\mathrm{el}/2)$.}\\label{fig:hopf}\n"
+        "\\end{figure}\n\n"
+        "\\begin{figure}[!htbp]\\centering\n  \\includegraphics[width=\\linewidth]{build/fig_gauge.pdf}\n"
+        "  \\caption{Gauge couplings and the instanton. (a)~One-loop running of $\\alpha_i^{-1}$ from $M_Z$ with the "
+        "Standard Model coefficients (dashed) and the MSSM coefficients (solid); the MSSM lines meet near "
+        "$2\\times10^{16}$ GeV and the Standard Model's do not. (b)~The BPST instanton's radial density and its "
+        "cumulative second Chern number, which tends to $1$ and equals $1/2$ at $r=\\rho$. Perturbative running and a "
+        "classical solution: neither bears on a mass gap.}\\label{fig:gauge}\n"
+        "\\end{figure}\n\\FloatBarrier\n")
+
+
 def conclusion() -> str:
     return (
         "\\section{Conclusion}\\label{sec:conclusion}\n"
@@ -538,9 +599,14 @@ def conclusion() -> str:
         "open problem. The proved two-dimensional gap and the $O(N)$ asymptotics share the linear drift of the "
         "coupling under blocking, and we have kept them as a correspondence. For $E_8$ the checks confirm the "
         "decompositions behind the chirality theorem, show that a weight-vector count does not fit three generations "
-        "in $128$ weights, and reproduce $\\sin^2\\theta_W=3/8$ at unification.\n\n"
+        "in $128$ weights, reproduce $\\sin^2\\theta_W=3/8$ at unification, and place $SO(10)$, $SU(4)$ and the "
+        "frame-Higgs $40$ in the roots.\n\n"
+        "The appendix's Hopf material is a separate, topological thread. The Hopf fibration has Hopf invariant one, "
+        "the Hopf insulator's invariant is a signed count over eight momenta ($0,-1,+2,-1,0$ across the phases), and "
+        "the BPST instanton has second Chern number one. They share the three-sphere, not a theorem; the "
+        "insulator's band gap and the instanton number are not a Yang--Mills mass gap.\n\n"
         "Three limits apply throughout. The checks test internal consistency, not the truth of cited theorems; "
-        "several inputs are quoted from repositories, not derived; and the one-loop numbers are illustrations. The "
+        "several inputs are quoted from repositories, not derived; the one-loop numbers are illustrations; and the Hopf and instanton items are classical or non-interacting. The "
         "natural next steps are a geometric derivation of the hat's substitution entries from its tile, a check of "
         "whether the Spectre's boundary operator has a closed form, and, if the expert group's Yang--Mills write-up "
         "appears, a comparison of its statements with the chain of Section~\\ref{sec:ym}.\n")
@@ -557,7 +623,13 @@ def write(out_dir: Path, eqs) -> list[Path]:
     import explore
     explored = explore.run_all()
     nums = numbers(eqs, explored)
-    fig_checks = sum(len(d.checks) for d in (phys, geo, tra, chi))
+    try:
+        import pictures
+        pic_checks = pictures.make(out_dir)
+    except ImportError as exc:                       # matplotlib missing: the paper builds without Section 'Four pictures'
+        print(f"concise: pictures skipped ({exc})")
+        pic_checks = []
+    fig_checks = sum(len(d.checks) for d in (phys, geo, tra, chi)) + len(pic_checks)
 
     lines = ["% Generated by sympy_models/concise.py. Do not edit by hand.\n"]
     lines.append(introduction(nums, fig_checks))
@@ -570,7 +642,8 @@ def write(out_dir: Path, eqs) -> list[Path]:
     lines.append(ftex)
     lines.append("\\section{Geometry}\\label{sec:geometry}\n"
                  "The inflation factors of the aperiodic tilings are numbers, so their rows are checked "
-                 "equal in sympy, not only solved for. The equations are "
+                 "equal in sympy, not only solved for; the tiling algebra comes from the nariai~\\cite{nariai2026} and "
+                 "spectre~\\cite{spectre2026} repositories. The equations are "
                  + _names_line(geo.names) + ".\n")
     lines.append(gtex)
     byname = {x.name: x for x in explored}
@@ -578,7 +651,7 @@ def write(out_dir: Path, eqs) -> list[Path]:
         byname["hat_golden"], "sec:hat", "The golden hat",
         "Of the two inflation factors in Figure~\\ref{fig:geometry}, the hat's is the surprising one: it is a power of "
         "the golden ratio, a number the Penrose tilings made familiar, in a tiling that has nothing else of Penrose's. "
-        "We take the four-metatile substitution $M$ of the hat (quoted from the CICY repository) and derive what follows "
+        "We take the four-metatile substitution $M$ of the hat (quoted from the CICY repository~\\cite{cicy2026}) and derive what follows "
         "from it exactly.",
         "Two things stay open. First, the entries of $M$ and the hat counts are quoted, and the equality of the "
         "unreflected-hat vector with the $H$ row is a relation we verify but do not explain geometrically. Second, one "
@@ -602,27 +675,30 @@ def write(out_dir: Path, eqs) -> list[Path]:
         "analogues: a positive gap for the $O(3)$ lattice model, and exact asymptotics of the mass for $O(4)$. What is not "
         "is the existence of the limit $c=\\lim m_L/(a\\Lambda_L)$ for a gauge theory, its positivity, and any "
         "implication from the $O(N)$ results to $SU(N)$; the shared linear drift is a reason to look, not evidence of a "
-        "theorem."))
+        "theorem. Two exact perturbative facts sit beside this frame in the appendix: the tree-level gluon amplitudes, "
+        "which are rational numbers at rational kinematics, and the one-loop coefficients, whose $SU(3)$ entry is the "
+        "asymptotic-freedom number used here. Both live at weak coupling; neither touches the limit $c$ or its positivity."))
     lines.append("\\section{Lie algebras and chirality}\\label{sec:chirality}\n"
-                 "The companion repository of the chirality theorem puts the Standard Model in the $27$ of "
-                 "$E_6$ inside $E_8$. Figure~\\ref{fig:chirality} equates what the library states about the "
+                 "The companion repository of the chirality theorem~\\cite{chirality2026} puts the Standard Model in the "
+                 "$27$ of $E_6$ inside $E_8$. Figure~\\ref{fig:chirality} equates what the library states about the "
                  "half-spinor, the generation count, the fifteen Weyl fields and the hypercharge, each "
                  "in one concrete case, and draws the links between dimension counts that are not equalities. "
                  "The equations are " + _names_line(chi.names) + ".\n")
     lines.append(ctex)
     lines.append(explorations_section(explored))
+    if pic_checks:
+        lines.append(pictures_section(len(pic_checks)))
     lines.append(conclusion())
     sel, cited = selected_section(by_key)
     lines.append("\\appendix\n\\section{Registered results}\\label{sec:selected}\n"
                  "The registered models behind the figures; each is a sympy expression whose checks "
                  "passed in the full equations document.\n" + sel)
 
-    keys = {"rosettamath"} | cited
-    for d in (phys, geo, tra, chi):
-        for n in d.equations:
-            ref = kb.reference_for_source(kb.equation(n).source)
-            if ref:
-                keys.add(ref)
+    body_text = "\n".join(lines)
+    keys = {k for m in re.findall(r"\\cite\w*\{([^}]*)\}", body_text) for k in m.split(",")}
+    unknown = keys - set(kb.references())
+    if unknown:
+        raise ConciseError(f"cited but not in the knowledge base: {sorted(unknown)}")
     body = out_dir / "concise_body.tex"
     bib = out_dir / "concise_bibliography.tex"
     body.write_text("\n".join(lines), encoding="utf-8")

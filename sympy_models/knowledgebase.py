@@ -527,6 +527,7 @@ PSEUDO_ENTRIES = {   # key -> (short label for tables, section title)
     "chirality-lisi": ("CL", "Chirality, E8 and Lisi's triality (companion repository)"),
     "hopf-fibration": ("HF", "The Hopf fibration, closed forms and linking (companion repository)"),
     "hopf-insulator": ("HI", "The three-dimensional Hopf insulator (companion repository)"),
+    "cicy-gauge": ("CG", "Gluon amplitudes and gauge-coupling running (companion repository CICY)"),
 }
 
 # References outside the OpenAI release, as the fork's notes cite them (SPECTRE_CHAIR44.md, "Citation key").
@@ -573,6 +574,12 @@ EXTERNAL = {
         year=2013, url="https://arxiv.org/abs/1307.7206", doi="10.1103/PhysRevB.88.201105",
         note="arXiv:1307.7206; Phys. Rev. B 88, 201105(R) (2013). The tight-binding model with invariants 0, -1, 2.",
         status="Published; the companion repository checks the model numerically, this fork the closed forms."),
+    "bpst-1975": dict(
+        tag="BPST", entry="hopf-fibration", authors="A. A. Belavin, A. M. Polyakov, A. S. Schwartz and Yu. S. Tyupkin",
+        title="Pseudoparticle solutions of the Yang-Mills equations",
+        year=1975, url="https://doi.org/10.1016/0370-2693(75)90163-X", doi="10.1016/0370-2693(75)90163-X",
+        note="Phys. Lett. B 59, 85 (1975). The classical SU(2) instanton on Euclidean R^4.",
+        status="Published; textbook material, rederived symbolically."),
     "lisi-2007": dict(
         tag="Lisi07", entry="chirality-lisi", authors="A. G. Lisi",
         title="An Exceptionally Simple Theory of Everything",
@@ -4129,4 +4136,25 @@ REFERENCES_DATA = {'elsbernd2026': {'authors': 'Michael Elsbernd',
                          'Goodman-Strauss and on the Hat, with an evidence ledger that grades '
                          'every fact as derived, counted, second-route, quoted, premised or '
                          "Lean-checked. The tile and its substitution are the discoverers' work; "
-                         "the computations on them are this repository's."}}
+                         "the computations on them are this repository's."},
+ 'hopffibration2026': {'authors': 'B. S. Hartshorn (HopfFibration repository)',
+                       'title': 'The Hopf fibration in numpy and Blender',
+                       'subtitle': 'fibres, stereographic projection, linking numbers and four new figures',
+                       'year': 2026,
+                       'repo': 'brentharts/HopfFibration',
+                       'tag': 'hopf',
+                       'url': 'https://github.com/brentharts/HopfFibration',
+                       'manuscript': 'HOPF_FIGURES.md',
+                       'note': 'GPL-2.0 scripts and notes; the library rederives the closed forms the figures '
+                               'rely on and does not copy the scripts. The figures themselves are not rerun.'},
+ 'quantumlattice2026': {'authors': 'B. S. Hartshorn (quantum-lattice repository)',
+                        'title': 'Quantum Lattice: a PySide6 front end for tight-binding calculations',
+                        'subtitle': 'with the three-dimensional Hopf insulator and its figures',
+                        'year': 2026,
+                        'repo': 'brentharts/quantum-lattice',
+                        'tag': 'qlattice',
+                        'url': 'https://github.com/brentharts/quantum-lattice',
+                        'manuscript': 'HOPF_INSULATOR.md',
+                        'note': 'GPL-3.0 interface over a vendored pyqula; the library rederives the closed forms '
+                                'of the Hopf insulator and does not copy the scripts. Berry-curvature grids and '
+                                'preimage tracing are not rerun.'}}

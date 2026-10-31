@@ -11,6 +11,7 @@
 \usepackage[margin=0.8in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage{placeins}
 \usepackage{xcolor}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=green!40!black,urlcolor=blue!60!black]{hyperref}
 \usepackage{orcidlink}
@@ -35,7 +36,7 @@
 \noindent
 We join equations from the OpenAI math release and its companion repositories by reading each letter as the
 quantity it denotes, solving for that quantity and checking the result in sympy (\nChecks{} checks pass in the build).
-Three threads follow. (i)~The hat monotile's inflation factor is $\varphi^4$, and so is the ratio of unreflected to
+Three threads follow, and a short appendix adds a fourth. (i)~The hat monotile's inflation factor is $\varphi^4$, and so is the ratio of unreflected to
 reflected hats: the first follows from the characteristic polynomial $(x^2-1)(x^2-7x+1)$ of the four-metatile
 substitution, whose spectrum is $\{1,-1,\varphi^4,\varphi^{-4}\}$; the second because the unreflected-hat counts are the
 $H$ row of that matrix. The Spectre's inflation $4+\sqrt{15}$ is not a power of $\varphi$, and only its perimeter growth
@@ -44,7 +45,9 @@ we state the chain a gap must satisfy, a coupling-independent $E_{\mathrm{gap}}=
 $c=\lim m_L/(a\Lambda_L)$, check its consistency with two-loop scaling, and keep the analogy with $O(N)$ lattice
 models a correspondence, never an identity. (iii)~The $E_8$ decompositions behind the chirality theorem are rebuilt from
 the Cartan matrix and tied to the Standard Model's $16$, to $\sin^2\theta_W=3/8$ and to a weight count that does not
-admit three generations in $128$ weights. This is fork-level material, not an official OpenAI document.
+admit three generations in $128$ weights, and the $SO(10)\times SU(4)$ and frame-Higgs counts are read off the roots.
+(iv)~The appendix checks the Hopf fibration, the three-dimensional Hopf insulator and the textbook BPST instanton in
+closed form; these are topological and classical results and none bears on a Yang--Mills mass gap. This is fork-level material, not an official OpenAI document.
 \end{abstract}
 
 \input{build/concise_body.tex}
