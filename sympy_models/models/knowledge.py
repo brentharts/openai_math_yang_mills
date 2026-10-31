@@ -274,6 +274,45 @@ def build_and_verify():
           sp.simplify(kb.equation("Community detection threshold").relation().lhs
                       - ((a_ + 2 * b_) / 3 * ((a_ - b_) / (a_ + 2 * b_)) ** 2)) == 0, eq=eq_rc)
 
+    CHI_NAMES = ["Orthogonal algebra dimension", "Half-spinor dimension", "E6 fundamental branching",
+                 "Triality block roots", "Gell-Mann-Nishijima formula", "Weak mixing at unification",
+                 "Weight vector demand", "Standard Model content of the 27", "Clifford matrix size",
+                 "Chirality splitting"]
+    R_ = sp.Rational
+    eq_chi = register(NAME, Equation(
+        key="kb_chirality_lisi", entry="chirality-lisi",
+        title="E8, SO(10) and the Standard Model counts, from the knowledge base",
+        source_kind="knowledge-base", source=_src(*CHI_NAMES),
+        latex_str=(r"\dim\mathfrak{so}(n)=\frac{n(n-1)}{2},\quad S=2^{n/2-1},\quad 27=1+16+10,\quad "
+                   r"240=24+24+3\cdot 8\cdot 8,%%BR%%Q=T_3+Y,\quad s_W=\frac{1}{1+k}=\frac38,\quad "
+                   r"W=4FN_{\mathrm{gen}}=180,\quad 27=15+12,\quad s=2^{n/2},\quad S=\frac{s}{2}"),
+        notes="The entries this fork added from the chirality repository, in the graph's readings, tied to the "
+              "values of the model chirality_lisi: n = 8, 10, 14, 16 for so(n), the SO(10) case of the 27, E8 over "
+              "D4 times D4, the up quark's charge, the 16's traces, three generations of 15 Weyl fields and "
+              "Cl(11,3). The equations are laws of the shapes shown; the values are the cases the model checks.",
+    ))
+    eq_chi.cites = ["lisi2026", "chirality2026", "distler-garibaldi"]
+    eq_chi.see = see(CHI_NAMES, ("cl_orthogonal_dimension", "so(n)"), ("cl_half_spinor", "half-spinors"),
+                     ("cl_e6_fundamental", "the 27 under SO(10)"), ("cl_d4_d4", "the triality blocks"),
+                     ("cl_sm_sixteen", "the 16"), ("cl_weak_mixing", "the weak mixing angle"),
+                     ("cl_dg_dimension_bound", "the dimension bound"), ("cl_spin113", "Cl(11,3)"))
+    for n_val, dim_val in ((8, 28), (10, 45), (14, 91), (16, 120)):
+        check(NAME, f"'Orthogonal algebra dimension' at n = {n_val} is {dim_val}",
+              holds("Orthogonal algebra dimension", D=dim_val, n=n_val), eq=eq_chi)
+    check(NAME, "'Half-spinor dimension' gives 16 at n = 10 and 64 at n = 14",
+          holds("Half-spinor dimension", S=16, n=10) and holds("Half-spinor dimension", S=64, n=14), eq=eq_chi)
+    check(NAME, "'E6 fundamental branching' is 27 = 1 + 16 + 10", holds("E6 fundamental branching", D_f=27, S=16, n=10), eq=eq_chi)
+    check(NAME, "'Triality block roots' is 240 = 24 + 24 + 3 x 8 x 8",
+          holds("Triality block roots", R=240, R_a=24, R_b=24, D_a=8, D_b=8), eq=eq_chi)
+    check(NAME, "'Gell-Mann-Nishijima formula' holds for the left-handed up quark (Q = 2/3, T3 = 1/2, Y = 1/6)",
+          holds("Gell-Mann-Nishijima formula", Q=R_(2, 3), T_3=R_(1, 2), Y=R_(1, 6)), eq=eq_chi)
+    check(NAME, "'Weak mixing at unification' is 3/8 at k = 5/3", holds("Weak mixing at unification", s_W=R_(3, 8), k=R_(5, 3)), eq=eq_chi)
+    check(NAME, "'Weight vector demand' is 180 for three generations of 15 Weyl fields",
+          holds("Weight vector demand", W=180, F=15, N_gen=3), eq=eq_chi)
+    check(NAME, "'Standard Model content of the 27' is 27 = 15 + 12", holds("Standard Model content of the 27", D_f=27, F=15), eq=eq_chi)
+    check(NAME, "'Clifford matrix size' and 'Chirality splitting': Cl(11,3) is 128 by 128 and its half is 64",
+          holds("Clifford matrix size", s=128, n=14) and holds("Chirality splitting", S=64, s=128), eq=eq_chi)
+
     # tie the cross-checked equations into the graph (the 'models' edges)
     g = kb.graph()
     for eqobj, names in ((eq_sp, ["Spectre inflation factor", "Spectre inflation quadratic", "Spectre reciprocal pair",
@@ -284,6 +323,7 @@ def build_and_verify():
                          (eq_kt, ["Kosterlitz coupling flow", "Kosterlitz fugacity flow"]),
                          (eq_af, ["Asymptotic-freedom mass scaling", "Spin-model transmutation slope",
                                   "Spin block coupling"]),
+                         (eq_chi, CHI_NAMES),
                          (eq_disp, ["Magnon dispersion"]), (eq_bloch, ["Bloch magnon density"])):
         if g.get("registered", eqobj.key) is None:
             node = g.add(kb.Node("registered", eqobj.key, eqobj.key))
