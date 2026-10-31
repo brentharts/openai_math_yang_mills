@@ -1,0 +1,56 @@
+% Quantum gravity paper: spin networks on the SU(2) ladder, with large generated equations and no tables.
+%
+% This wrapper is hand-editable (title, author and abstract are placeholders). It pulls in generated fragments from build/:
+%     qgravity_body.tex            the figures and sections, built by qgravity.py
+%     qgravity_bibliography.tex    the references cited there
+%     qgravity_numbers.tex         the counts quoted in the introduction (macros \nEq, \nChecks, \nQgChecks, ...)
+% Regenerate them, and build this file, with:
+%     python3 sympy_models/export.py --pdf
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{placeins}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=green!40!black,urlcolor=blue!60!black]{hyperref}
+\usepackage{orcidlink}
+\hypersetup{pdfauthor={Brent Hartshorn},
+  pdftitle={Spin Networks on the SU(2) Ladder: checked equations toward loop quantum gravity}}
+\urlstyle{same}
+\makeatletter\def\UrlBreaks{\do\/\do\-\do\.\do\_}\makeatother
+\Urlmuskip=0mu plus 2mu
+\allowdisplaybreaks
+
+\title{Spin Networks on the $SU(2)$ Ladder:\\ Checked Equations toward Loop Quantum Gravity}
+\author{Brent Hartshorn \orcidlink{0009-0004-2853-655X}}
+\date{}
+
+\input{build/qgravity_numbers.tex}   % generated: \nChecks, \nQgChecks, ...
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+We read the exactly solved two-plaquette $SU(2)$ lattice gauge theory of this repository as the kinematics of loop quantum
+gravity: its gauge-invariant states are spin networks on the theta graph, and the electric energy of a link is the squared
+area of the surface that cuts it. Equations are joined by reading each letter as the quantity it denotes, solving for it
+and checking the result in sympy (\nChecks{} checks pass in the build, \nQgChecks{} of them in the new quantum gravity model).
+Three results follow. (i)~The mean-square area of the surface between the plaquettes in the ground state is exactly
+$2/(3g^8)$ at strong coupling and $3/(\sqrt{10}\,g^2)$ at weak coupling. (ii)~Counting spin-$\tfrac12$ punctures against the
+Bekenstein--Hawking entropy gives $\gamma_I=\ln2/(\pi\sqrt3)$, a property of that count and not of the area spectrum.
+(iii)~The smallest vertex with a volume of its own, four spin-$\tfrac12$ legs, has triple-product spectrum $\pm\sqrt3/4$.
+(iv)~The one gravity entry of the OpenAI release written in this language, on Einstein four-manifolds, concerns the curvature
+operator of $\mathrm{Spin}(4)=SU(2)_+\times SU(2)_-$: we compute its two Weyl blocks for $S^4$, $\mathbb{CP}^2$ and $S^2\times S^2$ from
+their metrics, recover $\chi=2,3,4$ and $\tau=0,1,0$, and state what corresponds to a spin network and what does not.
+A third plaquette tests the strip formula for the weak-coupling gap, $2\sqrt{2-\cos(\pi/4)}\approx2.274$, and the triple product (volume) operator is built on
+four-valent intertwiner spaces of any spins, with a conditional strong-coupling estimate at the corner of an L-shaped cluster.
+This is not a model of quantum gravity: the graph is fixed and the Hamiltonian is a gauge-theory one. This is fork-level
+material, not an official OpenAI document.
+\end{abstract}
+
+\input{build/qgravity_body.tex}
+
+\input{build/qgravity_bibliography.tex}
+\end{document}

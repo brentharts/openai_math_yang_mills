@@ -13,6 +13,7 @@ Writes, under sympy_models/build/:
     equations_summary.tex    summary table per CONTENTS entry   } \\input by the wrapper
     equations_by_entry.tex   one section per CONTENTS entry     } equations_document.tex
     concise_body.tex, concise_bibliography.tex                    } concise_document.tex (no tables)
+    qgravity_body.tex, qgravity_bibliography.tex, qgravity_numbers.tex } qgravity_document.tex (no tables)
 With --pdf, pdflatex is run on equations_document.tex until references settle (the hand-editable wrapper).
 Exit status is nonzero if any check fails, so nothing unverified is exported.
 """
@@ -35,6 +36,7 @@ import models  # noqa: E402
 CONTENTS = HERE.parent / "CONTENTS.md"
 WRAPPER = "equations_document.tex"
 CONCISE_WRAPPER = "concise_document.tex"
+QG_WRAPPER = "qgravity_document.tex"
 
 
 def build_pdf(out: Path, wrapper: str = WRAPPER) -> Path:
@@ -103,6 +105,8 @@ def main(argv):
             print(f"note: only {', '.join(names)} were run, so the document is partial")
         build_pdf(out)
         build_pdf(out, CONCISE_WRAPPER)
+        if (out / "qgravity_body.tex").exists():   # absent after a partial run
+            build_pdf(out, QG_WRAPPER)
 
 
 if __name__ == "__main__":

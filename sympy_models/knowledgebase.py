@@ -498,6 +498,10 @@ PREPRINTS = Path(__file__).resolve().parent.parent / "preprints"
 
 # key -> (tag used in the models' source strings, CONTENTS entry, preprint directory)
 MANUSCRIPTS = {
+    "oai-penrose": ("Pen", "260", "Spacetime-Penrose-inequalities-enclosing-area-charge-and-rigidity-October-5-2026"),
+    "oai-einstein4": ("E4", "348", "Positively-curved-Einstein-four-manifolds-September-23-2026"),
+    "oai-einstein-gap": ("EG", "348", "An-L2-Einstein-Gap-for-Nonnegatively-Curved-Four-Manifolds-October-5-2026"),
+    "oai-zero-plane": ("ZP", "348", "Zero-Plane-Rigidity-for-Einstein-Four-Manifolds-October-4-2026"),
     "oai-bloch": ("B", "271", "Blochs-Law-for-Finite-Range-Heisenberg-Ferromagnets-in-Three-Dimensions-October-5-2026"),
     "oai-bloch-correction": ("C", "271", "The-first-lattice-correction-to-Blochs-law-October-5-2026"),
     "oai-spherical-magnetization": ("Sph", "271", "The-spherical-magnetization-law-for-the-three-dimensional-quantum-Heisenberg-ferromagnet-October-5-2026"),
@@ -531,6 +535,7 @@ PSEUDO_ENTRIES = {   # key -> (short label for tables, section title)
     "forest-gauge": ("FG", "Strong-coupling lattice gauge theory in a forest gauge (companion repository)"),
     "formal-gauge": ("FM", "Machine-checked and rigorous lattice gauge theory: companion programmes and references (links only)"),
     "su2-lattice-gap": ("SU", "Exactly computable SU(2) lattice gauge theories: a 2D string tension, a one-plaquette gap and a two-plaquette ladder (fork)"),
+    "spin-network-qg": ("QG", "Spin networks and loop quantum gravity: area, intertwiners and the SU(2) ladder (fork)"),
 }
 
 # References outside the OpenAI release, as the fork's notes cite them (SPECTRE_CHAIR44.md, "Citation key").
@@ -617,6 +622,61 @@ EXTERNAL = {
         title="A counterexample to the periodic tiling conjecture (blog post)", year=2022,
         url="https://terrytao.wordpress.com/2022/11/29/a-counterexample-to-the-periodic-tiling-conjecture-2/",
         note="29 Nov 2022, on the full paper arXiv:2211.15847.", status="Blog post."),
+    # Loop quantum gravity and spin networks (models/qg_spin_network.py). Cited by arXiv identifier only: the
+    # fork matched each identifier to its title and authors on arXiv, and did not retrieve journal references or DOIs.
+    "rovelli-smolin-1995": dict(
+        tag="RS", entry="spin-network-qg", authors="C. Rovelli and L. Smolin",
+        title="Discreteness of area and volume in quantum gravity",
+        year=1994, url="https://arxiv.org/abs/gr-qc/9411005", note="arXiv:gr-qc/9411005. The area and volume spectra.",
+        status="Standard reference; quoted, not rederived beyond the closed form of the area."),
+    "ashtekar-lewandowski-1997": dict(
+        tag="AL", entry="spin-network-qg", authors="A. Ashtekar and J. Lewandowski",
+        title="Quantum theory of geometry I: Area operators",
+        year=1996, url="https://arxiv.org/abs/gr-qc/9602046", note="arXiv:gr-qc/9602046. The area operator on spin networks.",
+        status="Standard reference; quoted."),
+    "rovelli-1996": dict(
+        tag="Rov", entry="spin-network-qg", authors="C. Rovelli",
+        title="Black hole entropy from loop quantum gravity",
+        year=1996, url="https://arxiv.org/abs/gr-qc/9603063", note="arXiv:gr-qc/9603063. Counting with spin-1/2 punctures.",
+        status="Standard reference; later counts differ (see DL)."),
+    "barbieri-1998": dict(
+        tag="Bar", entry="spin-network-qg", authors="A. Barbieri",
+        title="Quantum tetrahedra and simplicial spin networks",
+        year=1997, url="https://arxiv.org/abs/gr-qc/9707010", note="arXiv:gr-qc/9707010. The four-valent intertwiner as a quantum tetrahedron.",
+        status="Standard reference; the fork checks the operator's spectrum on four spin-1/2 only."),
+    "domagala-lewandowski-2004": dict(
+        tag="DL", entry="spin-network-qg", authors="M. Domagala and J. Lewandowski",
+        title="Black hole entropy from quantum geometry",
+        year=2004, url="https://arxiv.org/abs/gr-qc/0407051", note="arXiv:gr-qc/0407051. The count over all spins.",
+        status="Quoted, not rederived."),
+    "gursky-lebrun-1999": dict(
+        tag="GL", entry="348", authors="M. J. Gursky and C. LeBrun",
+        title="On Einstein manifolds of positive sectional curvature",
+        year=1999, url="https://arxiv.org/abs/math/9807055", note="arXiv:math/9807055. The gap E v^2 >= 1 on a nonzero Weyl block, "
+        "as the paper of entry 348 quotes it; the fork did not read this paper.",
+        status="Cited as the paper of entry 348 cites it; the fork matched the arXiv identifier to the title only."),
+    "eprl-2008": dict(
+        tag="EPRL", entry="spin-network-qg", authors="J. Engle, E. Livine, R. Pereira and C. Rovelli",
+        title="LQG vertex with finite Immirzi parameter",
+        year=2007, url="https://arxiv.org/abs/0711.0146", note="arXiv:0711.0146. The spin-foam vertex in which the SU(2)_+ and SU(2)_- spins are tied "
+        "to one SU(2) spin through the Immirzi parameter. Cited for that context only; the fork did not read it.",
+        status="Cited for context; the fork matched the arXiv identifier to the title only."),
+    "zenodo-23783316": dict(
+        tag="Rom", entry="forest-gauge", authors="T. Romanov",
+        title="Three-dimensional lattice Yang-Mills theory in a forest gauge: a Dobrushin range and a certified curvature bound",
+        year=2026, url="https://doi.org/10.5281/zenodo.23783316", doi="10.5281/zenodo.23783316",
+        note="Supplied by the author of the fork as DOI 10.5281/zenodo.23783316, with the paper attached as a file named 2610.0069v1.pdf; "
+        "the fork read that file. The paper itself cites its code, certificates and Lean files as Zenodo v1.0.0, doi:10.5281/zenodo.23783317; "
+        "whether ...316 is the concept record of the same deposit was not checked. Wilson SU(2) at strong coupling on Z^3 in a period-3 forest "
+        "gauge: Dobrushin range beta_W < 4/7 and transfer-matrix gap m >= -log(7 beta_W/4); Hessian bound h = 9.599991.",
+        status="Unrefereed; the paper says its Dobrushin result depends on unrefereed inputs."),
+    "kogut-susskind-1975": dict(
+        tag="KS", entry="spin-network-qg", authors="J. Kogut and L. Susskind",
+        title="Hamiltonian formulation of Wilson's lattice gauge theories",
+        year=1975, url="https://doi.org/10.1103/PhysRevD.11.395",
+        note="Phys. Rev. D 11, 395 (1975), as cited in SU2_LATTICE_GAP.md. The fork did not retrieve the paper, and the DOI "
+             "link is formed from the journal reference, not checked.",
+        status="Standard reference; the Hamiltonian of the ladder."),
 }
 
 
@@ -644,7 +704,7 @@ def _manuscript(key: str, tag: str, entry: str, directory: str) -> Reference:
         text = readme.read_text(encoding="utf-8")
         m = re.search(r"^# \[(.+?)\]\((.+?)\)", text, re.M)
         if m:
-            title, pdf = m.group(1), m.group(2)
+            title, pdf = m.group(1).replace("$L^2$", "L\u00b2"), m.group(2)
         d = re.search(r"\*\*Date:\*\*\s*(.+)", text)
         date = d.group(1).strip() if d else date
     return Reference(key, "OpenAI", title, int(re.search(r"(\d{4})\s*$", date).group(1)) if re.search(r"(\d{4})\s*$", date) else 2026,
@@ -1194,6 +1254,10 @@ EXTRA_QUANTITIES = [
     ("weak mixing parameter", "1", "sin squared of the weak mixing angle, the fraction g'^2/(g^2 + g'^2) of the hypercharge coupling in the photon.", "Weinberg_angle"),
     ("weight vector count", "1", "The number of linearly independent weight vectors a set of fermions needs inside a representation.", "Weight_(representation_theory)"),
     ("Weyl fields per generation", "1", "The number of left-handed Weyl fields in one Standard Model generation without a right-handed neutrino: 15.", "Standard_Model"),
+    ("spin quantum number", "1", "The SU(2) spin j = 0, 1/2, 1, ... of an irreducible representation, carried by a link of a spin network.", "Spin_(physics)"),
+    ("casimir eigenvalue", "1", "The eigenvalue j(j+1) of the SU(2) quadratic Casimir in the spin-j representation; the square of an electric field on a link in lattice units.", "Casimir_element"),
+    ("immirzi parameter", "1", "The dimensionless Barbero-Immirzi parameter of loop quantum gravity, which sets the scale of the area spectrum.", "Immirzi_parameter"),
+    ("puncture count", "1", "The number of links of a spin network that pierce a given surface.", "Loop_quantum_gravity"),
     ("tree branching number", "1", "The mean number of children in a tree on which a noisy signal is broadcast.", "Galton%E2%80%93Watson_process"),
     ("channel eigenvalue", "1", "The second eigenvalue of the symmetric noise channel; 1 is no noise.", "Stochastic_matrix"),
     ("within-community degree", "1", "The mean number of neighbours a vertex has in its own community (a of the block model).", "Stochastic_block_model"),
@@ -1280,6 +1344,29 @@ EXTRA_EQUATIONS += [
      "The chirality element squares to one, so the 128 splits into two halves of 64: a half-spinor is half the "
      "matrix size. With the half-spinor dimension 2^(n/2 - 1) this is the same 64 seen two ways."),
 ]
+EXTRA_EQUATIONS += [
+    ("Spin Casimir", "Loop quantum gravity", r"c_{2} = j (j + 1)",
+     "SU2_LATTICE_GAP.md (Conventions), textbook", "Casimir_element",
+     "The SU(2) quadratic Casimir in the spin-j representation. On a link of a lattice gauge theory it is the square of "
+     "the electric field in lattice units; on a link of a spin network it is the square of the flux through a surface the "
+     "link pierces, up to the constant of the area spectrum."),
+    ("LQG area spectrum", "Loop quantum gravity", r"A = 8 \pi \gamma_{I} \ell_P^{2} \sqrt{c_{2}}",
+     "Rovelli-Smolin 1995 (gr-qc/9411005), Ashtekar-Lewandowski 1997 (gr-qc/9602046), textbook", "Loop_quantum_gravity",
+     "The area a spin-network link of spin j adds to a surface it pierces. The Casimir c_2 = j(j+1) gives the "
+     "familiar 8 pi gamma l_P^2 sqrt(j(j+1)). The Immirzi parameter gamma is not fixed by the area spectrum itself."),
+    ("Area of N spin-1/2 punctures", "Loop quantum gravity", r"A = 4 \sqrt{3} \pi N \gamma_{I} \ell_P^{2}",
+     "derived from LQG area spectrum with c_2 = 3/4", "Loop_quantum_gravity",
+     "N links of spin 1/2 pierce the surface: each adds 8 pi gamma l_P^2 sqrt(3/4) = 4 sqrt 3 pi gamma l_P^2."),
+    ("Horizon area", "General relativity", r"A = 4 \pi r_s^{2}",
+     "textbook: the area of the Schwarzschild horizon", "Schwarzschild_metric",
+     "The area of the horizon of radius r_s, the one geometric input that joins the Schwarzschild radius to the "
+     "entropy and to the area spectrum."),
+    ("Spin-1/2 puncture microstates", "Loop quantum gravity", r"W = 2^{N}",
+     "Rovelli 1996 (gr-qc/9603063), leading exponential order only", "Loop_quantum_gravity",
+     "The SU(2)-invariant states of N spin-1/2 punctures number the Catalan number C(N/2) = 2^N / (sqrt(pi) (N/2)^(3/2)) "
+     "to leading order. The equation keeps the leading exponential, which is all the entropy at large N needs; the "
+     "exact count is a registered equation of the model qg_spin_network."),
+]
 EXTRA_READINGS = {
     "Chair44 contact count": {"C": "contact count", "n": "hierarchy level"},
     "Chair44 contact defect": {"d": "contact defect", "n": "hierarchy level"},
@@ -1304,6 +1391,13 @@ EXTRA_READINGS.update({
     "Standard Model content of the 27": {"D_f": "fundamental representation dimension", "F": "Weyl fields per generation"},
     "Clifford matrix size": {"s": "Clifford matrix size", "n": "vector representation dimension"},
     "Chirality splitting": {"S": "half-spinor dimension", "s": "Clifford matrix size"},
+})
+EXTRA_READINGS.update({
+    "Spin Casimir": {"c_2": "casimir eigenvalue", "j": "spin quantum number"},
+    "LQG area spectrum": {"A": "area", "gamma_I": "immirzi parameter", "ell_P": "length", "c_2": "casimir eigenvalue"},
+    "Area of N spin-1/2 punctures": {"A": "area", "N": "puncture count", "gamma_I": "immirzi parameter", "ell_P": "length"},
+    "Horizon area": {"A": "area", "r_s": "length"},
+    "Spin-1/2 puncture microstates": {"W": "microstate count", "N": "puncture count"},
 })
 EXTRA_LINKS = [
     ("Community detection threshold", "SPECIALISES", "Reconstruction threshold",
@@ -1361,6 +1455,79 @@ EXTRA_LINKS += [
      "the unification boundary condition: sin squared is 3/8 at the unification scale and one-loop running of the "
      "couplings carries it to its low-energy value. The library does not run it"),
 ]
+EXTRA_LINKS += [
+    ("Spin Casimir", "DEFINES", "LQG area spectrum",
+     "the area a link adds is a function of the Casimir j(j+1) of its spin, the same number that is the electric energy "
+     "of the link in the SU(2) lattice gauge theory of SU2_LATTICE_GAP.md"),
+    ("Area of N spin-1/2 punctures", "SPECIALISES", "LQG area spectrum", "N links each of spin 1/2, so c_2 = 3/4 for each"),
+    ("LQG area spectrum", "FIELD", "Bekenstein-Hawking entropy",
+     "both state an area. They are matched through an entropy count, which fixes the Immirzi parameter only for the "
+     "spins counted: ln 2/(pi sqrt 3) for spin-1/2 punctures alone, a different number when all spins are counted"),
+    ("Spin-1/2 puncture microstates", "FIELD", "Boltzmann entropy",
+     "S = k_B ln W with W = 2^N gives S = k_B N ln 2, the entropy of N two-state punctures"),
+    ("LQG area spectrum", "FIELD", "Planck length", "the l_P of the area spectrum is the Planck length"),
+    ("Horizon area", "FIELD", "Schwarzschild radius", "the horizon of a Schwarzschild black hole has radius r_s and this area"),
+]
+
+EXTRA_QUANTITIES += [
+    ("signature", "1", "The signature of the intersection form of a closed oriented four-manifold, the Hirzebruch integral of the two Weyl blocks.", "Signature_(topology)"),
+    ("normalised volume", "1", "The Riemannian volume of a four-manifold whose metric is scaled to Ric = 3g, a pure number.", "Volume_form"),
+    ("self-dual Weyl moment", "1", "The mean square E v^2 of the self-dual Weyl block over the manifold, with |T|^2 = 6 v^2 (Ric = 3g).", "Weyl_tensor"),
+    ("anti-self-dual Weyl moment", "1", "The mean square E b^2 of the anti-self-dual Weyl block over the manifold, with |U|^2 = 6 b^2 (Ric = 3g).", "Weyl_tensor"),
+    ("minimal sectional curvature", "1", "The least sectional curvature over all two-planes of an Einstein four-manifold with Ric = 3g.", "Sectional_curvature"),
+    ("self-dual block depth", "1", "x = minus the least eigenvalue of the self-dual Weyl block T.", "Weyl_tensor"),
+    ("anti-self-dual block depth", "1", "y = minus the least eigenvalue of the anti-self-dual Weyl block U.", "Weyl_tensor"),
+]
+EXTRA_EQUATIONS += [
+    ("Euler characteristic of an Einstein four-manifold", "Differential geometry", r"\chi_{E} = \frac{3 V}{4 \pi^{2}} (1 + s_{S} + s_{A})",
+     "OpenAI entry 348 (Positively curved Einstein four-manifolds, sections 3-4); checked in models/qg_einstein4.py on the three model spaces", "Euler_characteristic",
+     "Chern-Gauss-Bonnet for Ric = 3g: the Ricci terms cancel against the scalar curvature and what is left is the volume and the two second "
+     "moments of the Weyl blocks. S^4, CP^2 and S^2 x S^2 have chi = 2, 3, 4."),
+    ("Signature of an Einstein four-manifold", "Differential geometry", r"\tau_{E} = \frac{V}{2 \pi^{2}} (s_{S} - s_{A})",
+     "OpenAI entry 348 (Positively curved Einstein four-manifolds, sections 3-4); checked in models/qg_einstein4.py on the three model spaces", "Signature_(topology)",
+     "The signature theorem for Ric = 3g: the difference of the two Weyl second moments times the volume. CP^2 carries the whole signature in its "
+     "self-dual block, S^4 and S^2 x S^2 have none."),
+    ("Minimal sectional curvature", "Differential geometry", r"K_{m} = 1 - \frac{x + y}{2}",
+     "OpenAI entry 348 (Positively curved Einstein four-manifolds, section 1: the condition x + y < 2); checked in models/qg_einstein4.py", "Sectional_curvature",
+     "A two-plane has equal self-dual and anti-self-dual parts, so its curvature is the mean of one value in each block; the least is 1 minus half "
+     "the depths of the two blocks. Strict positivity is x + y < 2."),
+    ("Weyl block Casimir", "Loop quantum gravity", r"c_{2} = 2 (2 + 1)",
+     "derived: a Weyl block is a trace-free symmetric endomorphism of Lambda^+, the spin-2 representation of su(2)_+; checked in models/qg_einstein4.py", "Casimir_element",
+     "The Casimir of the five-dimensional representation that carries one chirality of the Weyl curvature of a four-manifold: the same j(j+1) as on "
+     "a link of a spin network, at j = 2."),
+]
+EXTRA_READINGS.update({
+    "Euler characteristic of an Einstein four-manifold": {"chi_E": "euler characteristic", "V": "normalised volume",
+                                                          "s_S": "self-dual Weyl moment", "s_A": "anti-self-dual Weyl moment"},
+    "Signature of an Einstein four-manifold": {"tau_E": "signature", "V": "normalised volume",
+                                               "s_S": "self-dual Weyl moment", "s_A": "anti-self-dual Weyl moment"},
+    "Minimal sectional curvature": {"K_m": "minimal sectional curvature", "x": "self-dual block depth", "y": "anti-self-dual block depth"},
+    "Weyl block Casimir": {"c_2": "casimir eigenvalue"},
+})
+EXTRA_LINKS += [
+    ("Euler characteristic of an Einstein four-manifold", "FIELD", "Signature of an Einstein four-manifold",
+     "the same two Weyl second moments and the same volume: chi fixes their sum and tau their difference"),
+    ("Spin Casimir", "SPECIALISES", "Weyl block Casimir",
+     "j = 2: the Weyl block of one chirality is the spin-2 representation of its SU(2), Casimir 6, the Casimir of a spin-network link of spin 2"),
+    ("Weyl block Casimir", "FIELD", "Signature of an Einstein four-manifold",
+     "the spin-2 block whose second moment s_S enters the signature"),
+]
+
+EXTRA_EQUATIONS += [
+    ("Penrose mass at equality", "General relativity", r"M = \frac{c^{2}}{G} \sqrt{\frac{A}{16 \pi}}",
+     "OpenAI entry 260 (Spacetime Penrose inequalities, section 1.1: m >= sqrt(A_min/16 pi), in units G = c = 1); the equality case, attained by Schwarzschild; checked in models/qg_penrose.py", "Penrose_inequality",
+     "The mass that saturates the Penrose inequality for an enclosing area A: the inequality says M is at least this. A Schwarzschild "
+     "horizon saturates it, so with the horizon area 4 pi r_s^2 it returns the Schwarzschild radius relation."),
+]
+EXTRA_READINGS.update({
+    "Penrose mass at equality": {"M": "mass", "c": "speed of light", "G": "gravitational constant", "A": "area"},
+})
+EXTRA_LINKS += [
+    ("Schwarzschild radius", "FIELD", "Penrose mass at equality",
+     "with A = 4 pi r_s^2 the Penrose mass is the mass of the Schwarzschild radius: Schwarzschild data saturate the inequality"),
+    ("LQG area spectrum", "FIELD", "Penrose mass at equality",
+     "the area that bounds a mass from below in the Penrose inequality is the area whose spectrum is discrete; combining the two is a heuristic"),
+]
 
 EXTRA_ENTRY = {   # CONTENTS entry (or pseudo-entry) of an addition
     "Chair44 contact count": "spectre-chair44", "Chair44 contact defect": "spectre-chair44",
@@ -1374,6 +1541,12 @@ EXTRA_ENTRY = {   # CONTENTS entry (or pseudo-entry) of an addition
     "Weak mixing at unification": "chirality-lisi", "Weight vector demand": "chirality-lisi",
     "Standard Model content of the 27": "chirality-lisi", "Clifford matrix size": "chirality-lisi",
     "Chirality splitting": "chirality-lisi",
+    "Spin Casimir": "spin-network-qg", "LQG area spectrum": "spin-network-qg",
+    "Area of N spin-1/2 punctures": "spin-network-qg", "Horizon area": "spin-network-qg",
+    "Spin-1/2 puncture microstates": "spin-network-qg",
+    "Euler characteristic of an Einstein four-manifold": "348", "Signature of an Einstein four-manifold": "348",
+    "Minimal sectional curvature": "348", "Weyl block Casimir": "348",
+    "Penrose mass at equality": "260",
 }
 
 # --------------------------------------------------------------------------------------

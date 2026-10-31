@@ -42,7 +42,7 @@ _SPECIAL = {
 _UNICODE = {
     "\u2013": "--", "\u2014": "---", "\u2212": "-", "\u2018": "`", "\u2019": "'",
     "\u201c": "``", "\u201d": "''", "\u2265": r"$\ge$", "\u2264": r"$\le$", "\u2192": r"$\to$",
-    "\u03c0": r"$\pi$", "\u03b6": r"$\zeta$", "\u00d7": r"$\times$", "\u221a": r"$\surd$",
+    "\u03c0": r"$\pi$", "\u03b6": r"$\zeta$", "\u00d7": r"$\times$", "\u221a": r"$\surd$", "\u00b2": r"$^2$",
 }
 
 
@@ -227,4 +227,5 @@ def write(eqs, out_dir: Path, contents_path: Path) -> list[Path]:
     body.write_text(render_body(groups, titles), encoding="utf-8")
     import kbdoc            # imported here: kbdoc imports esc() from this module
     import concise
-    return [summary, body, *kbdoc.write(out_dir, eqs), *concise.write(out_dir, eqs)]
+    import qgravity
+    return [summary, body, *kbdoc.write(out_dir, eqs), *concise.write(out_dir, eqs), *qgravity.write(out_dir, eqs)]
