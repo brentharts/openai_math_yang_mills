@@ -68,7 +68,7 @@ def run() -> Result:
     r.check("so(10) contains so(6) + so(4): 45 = 15 + 6 + 6 x 4, with 15 = dim su(4) and 6 = dim su(2)^2",
             45 == 15 + 6 + 6 * 4)
     r.prose = (r"The equation $\dim\mathfrak{su}(N)=\dim\mathfrak{so}(n)$ is $(2n-1)^2-8N^2=-7$. Its first solutions "
-               r"$(N,n)=(2,3),(4,6),(11,16),(23,33),(64,91)$ were found by search and checked. Only the first two "
+               r"$(N,n)=(2,3)$, $(4,6)$, $(11,16)$, $(23,33)$ and $(64,91)$ were found by search and checked. Only the first two "
                r"are isomorphisms ($\mathfrak{su}(2)\cong\mathfrak{so}(3)$ and $\mathfrak{su}(4)\cong\mathfrak{so}(6)$: equal rank and "
                r"root count, and equal Cartan matrices up to relabelling); at $(11,16)$ the ranks are 10 and 8. "
                r"The second isomorphism is the Pati--Salam $SU(4)$, and since $S(n+m)=2S(n)S(m)$ the half-spinor of "
