@@ -24,6 +24,12 @@ Reads the two-plaquette SU(2) lattice model (`sympy_models/models/su2_lattice_la
 - `sympy_models/models/forest_gauge_4d_theorems.py` (34 checks, `forest-gauge`): the finite statements of Bhattacharjee-Bhattacharya-Lockwood-Romanov (30 Oct 2026; pages 1-6 and Appendix A read, proofs not read): Table III line field, partner counts 12/14/18, Table I from root systems (17 groups) with Lichnerowicz (equality only for SU(2): the j = 1/2 Casimir), and the numbers of Theorems 1-7. Counted in the paper (new section "Gauge fixing and the curvature of the link"). One printed SU(3) value (0.0177) is 0.00004 above what the stated alpha_3 gives.
 - New reference `bbll-forest-4d`. The Zenodo record 10.5281/zenodo.23841532 could not be fetched (host not on the session allowlist), so it is not cited; attach the PDF or paste the abstract to add it.
 
+## Fifth round
+- `models/qg_kerr.py` (20 checks, entry 264): Kerr horizon algebra exact; the Penrose gap of Kerr is `M r_-/2`, so entry 260 is strict for Kerr exactly when the inner horizon exists (the condition `r_- > 0` of the near-Kerr papers); `A_+ A_- = (8 pi J)^2`. Heuristic: the Kerr bound `A >= 8 pi |J|` against the spin-1/2 puncture area needs N >= 5 at J = 1/2, N >= 10 at J = 1. New paper section "Strong cosmic censorship near Kerr"; three OpenAI manuscripts added (K2, K1, K0).
+- `models/qg_planar_maps.py` (17 checks, entry 211): brute-force rooted planar maps and tree-rooted maps against Tutte and Mullin; KPZ exponents; SU(2)_k invariant counts (closed walks on `A_{k+1}`), loop weight `sqrt q = 2 cos(pi/(k+2))`, q = 1, 2, 3, 4 at k = 1, 2, 4, infinity. New paper section "Liouville quantum gravity and the Catalan counts"; five OpenAI manuscripts added. Liouville and loop quantum gravity are different theories; the link is the Temperley-Lieb loop weight and the Catalan counts only.
+- Classical formulas (Tutte, Mullin, KPZ) are quoted by name and checked by brute force or exact algebra; no source was retrieved for them. Quantum-group-deformed LQG is mentioned and not cited.
+- `document.py` gains the superscript one (U+00B9) for a manuscript title.
+
 ## Limits
 Not a model of quantum gravity: fixed graph, gauge-theory Hamiltonian, no diffeomorphism invariance, volume only for one four-valent vertex. The all-spin Immirzi value (about 0.2375) is quoted from Domagala-Lewandowski, not rederived. References are cited by arXiv ID; the Kogut-Susskind DOI is unchecked. Title and author line are placeholders.
 
