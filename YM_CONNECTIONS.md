@@ -48,6 +48,7 @@ Items the fork could check next, in increasing distance from what is here:
 
 ## Sources
 
+- [brentharts/4D_Wilson_Loop_RG](https://github.com/brentharts/4D_Wilson_Loop_RG) (Peev and Dogra; CC0-1.0), commit `70d9a77`: see [WILSON_LOOP_RG.md](WILSON_LOOP_RG.md). Reported, not checked.
 - [romanov360/yang-mills-4d-forest-certificate](https://github.com/romanov360/yang-mills-4d-forest-certificate) (code MIT, text CC BY 4.0), after Bhattacharjee, Bhattacharya and Lockwood, doi [10.5281/zenodo.23729004](https://doi.org/10.5281/zenodo.23729004): README, `forest4d.py`, `bloch4d.py`, `NEXT.md`. The fork rederives the forest, the counts, the identity-field value and the window arithmetic; the certificate, the Lean checks and the interval cover are quoted.
 - [romanov360/yang-mills-3d-forest-gauge](https://github.com/romanov360/yang-mills-3d-forest-gauge) (code MIT, paper CC BY 4.0), v1.0.0, doi [10.5281/zenodo.23783317](https://doi.org/10.5281/zenodo.23783317): README, `structure3d.py`, `torus3d.py`, `identity_exact.py`, `bloch_identity.py`. The fork rederives the forest, the partner counts, the threshold arithmetic and the identity-field lower bound itself; the interval-arithmetic certificate and the Lean file are quoted.
 - [brentharts/CICY](https://github.com/brentharts/CICY) (GPL-3.0), pinned at `67ce063`: README sections "Twistor theory and scattering amplitudes" and "The number 137, and what unification actually predicts".

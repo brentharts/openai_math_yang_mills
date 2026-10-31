@@ -75,6 +75,7 @@ This repository publishes the model's math manuscripts and their Lean formalizat
 - [KAKEYA.md](KAKEYA.md) for the local smoothing and Kakeya results announced alongside this claim.
 - [HIERARCHIES.md](HIERARCHIES.md) for the block-renormalization parallel between the O(N) papers and aperiodic substitution tilings.
 - [SU2_LATTICE_GAP.md](SU2_LATTICE_GAP.md) for exactly computed SU(2) lattice gaps in two dimensions and for one plaquette, with the limits stated: no continuum limit and no scaling window.
+- [WILSON_LOOP_RG.md](WILSON_LOOP_RG.md) for a companion programme on renormalised Wilson loops through Bałaban's RG, with the programme's own status labels and none of its mathematics verified here.
 - [YM_CONNECTIONS.md](YM_CONNECTIONS.md) for every connection to Yang-Mills the fork has checked, ranked by strength.
 - [history.md](history.md) for the release log.
 
