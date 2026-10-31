@@ -79,8 +79,7 @@ PHYSICS_ROWS = (
     ("reduced planck constant", ("Bekenstein-Hawking entropy", "Planck length",
                                  "Mass gap in physical units")),
     ("planck constant", ("Planck relation", "de Broglie relation", "Compton wavelength")),
-    ("lattice mass", ("Euclidean correlator decay", "Mass gap in physical units",
-                      "Asymptotic-freedom mass scaling")),
+    ("lattice mass", ("Euclidean correlator decay", "Mass gap in physical units")),
 )
 
 # Figure 2: geometry. A row lists its terms and the values of the letters that are not the row's
@@ -104,8 +103,27 @@ TRANSMUTATION_ROWS = (
     ("spin transmutation slope", ("Spin-model transmutation slope", "Spin block coupling")),
     ("gauge transmutation slope", ("Gauge transmutation slope", "Gauge block coupling")),
     ("inverse coupling", ("Lattice coupling", "Gauge block coupling")),
-    ("lattice mass", ("Euclidean correlator decay", "Mass gap in physical units",
-                      "Asymptotic-freedom mass scaling")),
+    ("lattice mass", ("Euclidean correlator decay", "Mass gap in physical units")),
+)
+
+# Pairs that must never share an identity row: the O(N) spin model's scaling form is a statement
+# about a different theory from the gauge-theory lattice mass and coupling, and the library
+# relates them by a link (a correspondence), not by an equals sign (rosettaphys joins them to
+# nothing; see its selftest).
+NOT_IDENTICAL = (
+    ("Asymptotic-freedom mass scaling", "Euclidean correlator decay"),
+    ("Asymptotic-freedom mass scaling", "Mass gap in physical units"),
+    ("Asymptotic-freedom mass scaling", "Lattice coupling"),
+    ("Spin-model transmutation slope", "Gauge transmutation slope"),
+    ("Spin block coupling", "Gauge block coupling"),
+)
+
+# Figure 3's correspondences, drawn from the library's links (kind and note come from there).
+TRANSMUTATION_ARROWS = (
+    ("Asymptotic-freedom mass scaling", "Dimensional transmutation"),
+    ("Euclidean correlator decay", "Asymptotic-freedom mass scaling"),
+    ("Spin-model transmutation slope", "Gauge transmutation slope"),
+    ("Spin block coupling", "Gauge block coupling"),
 )
 
 # registered sympy results shown as single large displays, with one line of prose each
@@ -163,6 +181,7 @@ class Display:
         self.equations: set[str] = set()
         self.quantities: set[str] = set()
         self.checks: list[str] = []
+        self.arrows = 0
         self.names: list[str] = []          # in order of first appearance, for the prose line
 
     def _note(self, eq: kb.KBEquation):
@@ -172,6 +191,10 @@ class Display:
         self.quantities.update(eq.quantities())
 
     def family_row(self, quantity: str, names, tail: str = ""):
+        for a, b in NOT_IDENTICAL:
+            if a in names and b in names:
+                raise ConciseError(f"{a} and {b} are related by a correspondence, not an identity; "
+                                   f"they cannot share the row for {quantity}")
         terms, head = [], None
         for name in names:
             eq = kb.equation(name)
@@ -211,14 +234,38 @@ class Display:
                            + ", ".join(f"{k} = {v}" for k, v in assign.items()))
         self.rows.append(f"{head} &= {' = '.join(terms)}")
 
+    def arrow_row(self, a: str, b: str):
+        """A correspondence: two library equations joined by the arrow their link names."""
+        link = next(((k, n) for x, k, y, n in kb.library().links if (x, y) == (a, b)), None)
+        if link is None:
+            raise ConciseError(f"the library has no link from {a} to {b}")
+        kind, _note = link
+        arrow, word = {"FIELD": (r"\longleftrightarrow", "same field"),
+                       "SPECIALISES": (r"\longrightarrow", "specialises"),
+                       "DEFINES": (r"\longrightarrow", "defines")}[kind]
+        side = lambda n: (rf"\underbrace{{{_compact(kb.equation(n).latex)}}}"
+                          rf"_{{\text{{\tiny {_tex_text(short(n))}}}}}")
+        for n in (a, b):
+            self._note(kb.equation(n))
+        self.arrows += 1
+        self.checks.append(f"{a} -- {kind} -> {b}: a link of the library, drawn as a correspondence, not as an equation")
+        self.rows.append(rf"{{}} & {side(a)} \;\overset{{\text{{\tiny {word}}}}}{{{arrow}}}\; {side(b)}")
+
     def raw_row(self, tex: str, checks=()):
         self.rows.append(tex)
         self.checks.extend(checks)
 
     def tex(self) -> str:
-        body = " \\\\[1.2ex]\n".join(self.rows)
-        tally = (r"\begin{array}{l} \text{one conjecture:} \\ "
-                 rf"\text{{{len(self.equations)} equations, {len(self.rows)} quantities}} \end{{array}}")
+        ids = [r for r in self.rows if not r.startswith("{}")]
+        arrows = [r for r in self.rows if r.startswith("{}")]
+        body = " \\\\[1.2ex]\n".join(ids)
+        if arrows:
+            body += " \\\\[2.4ex]\n" + " \\\\[1.6ex]\n".join(arrows)
+        tally = (r"\begin{array}{l} \text{identities:} \\ "
+                 rf"\text{{{len(self.equations)} equations, {len(ids)} quantities}}")
+        if arrows:
+            tally += rf" \\[0.6ex] \text{{correspondences:}} \\ \text{{{len(arrows)} links}}"
+        tally += r" \end{array}"
         return f"\\left.\n\\begin{{aligned}}\n{body}\n\\end{{aligned}}\n\\;\\right\\}} {tally}"
 
 
@@ -306,17 +353,16 @@ def transmutation_figure():
     for quantity, names in TRANSMUTATION_ROWS:
         d.family_row(quantity, names)
     d.checks.extend(transmutation_bridge())
-    # correspondence rows: two exponents joined by an arrow, in the same alignment as the rows above
-    arrow = lambda note: (r"\overbrace{\hphantom{xxxxxx}}^{\text{\tiny %s}} &" % note)
-    d.raw_row(arrow("same field") + r" \underbrace{e^{-r_s\beta}}_{\text{\tiny O($N$) mass gap}} "
-              r"\;\longleftrightarrow\; \underbrace{e^{-r_g\beta}}_{\text{\tiny Yang--Mills scale, $\beta=2N/g^2$}}")
-    d.raw_row(arrow("same field") + r" \underbrace{m_L}_{\text{\tiny O($N$) lattice mass}} "
-              r"\;\longleftrightarrow\; \underbrace{a\Lambda_L}_{\text{\tiny Yang--Mills lattice scale}}")
+    for a, b in TRANSMUTATION_ARROWS:
+        d.arrow_row(a, b)
     cap = ("Dimensional transmutation across the library. The identity rows are the library's equations "
-           "solved for the slope, the coupling and the mass. The arrows join results that are about the "
-           "same kind of thing without being the same number: the Yang--Mills exponent "
-           "$1/(2b_0g^2)$ equals $r_g\\beta$ exactly (checked), and the $O(N)$ exponent is $r_s\\beta$, "
-           "a slope of the same kind with a different value.")
+           "solved for the slopes, the coupling and the gauge-theory lattice mass. The arrows are "
+           "correspondences, not identities: the $O(N)$ spin model's scaling form and the Yang--Mills lattice "
+           "mass share a shape (a scale that is an exponential of an inverse coupling over a one-loop "
+           "coefficient) but not coefficients, couplings or theory, so the library links them and the "
+           "display does not equate them. The one exact statement across the arrow is checked: the "
+           "Yang--Mills exponent $1/(2b_0g^2)$ equals $r_g\\beta$, with $r_g=12\\pi^2/(11N^2)$, while the "
+           "$O(N)$ exponent is $r_s\\beta$ with $r_s=2\\pi/(N-2)$.")
     return d, _figure("fig:transmutation", d.tex(), cap, 0.98)
 
 
@@ -361,8 +407,9 @@ def write(out_dir: Path, eqs) -> list[Path]:
     lines.append(gtex)
     lines.append("\\section{Transmutation}\\label{sec:transmutation}\n"
                  "The mass gap of a spin model and the lattice scale of a gauge theory both fall as "
-                 "$\\exp(-\\mathrm{slope}\\cdot\\beta)$. Figure~\\ref{fig:transmutation} states the "
-                 "identities that hold and draws an arrow where the correspondence is only analogy. "
+                 "$\\exp(-\\mathrm{slope}\\cdot\\beta)$, but they belong to different theories. "
+                 "Figure~\\ref{fig:transmutation} states the identities within each theory and draws an "
+                 "arrow, not an equals sign, between the two. "
                  "The equations are " + _names_line(tra.names) + ".\n")
     lines.append(ttex)
     sel, cited = selected_section(by_key)

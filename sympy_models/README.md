@@ -70,8 +70,8 @@ solved for it and underbraced with that equation's name, closed by a side brace 
 - Figure 1 (physics): energy, force, G, k_B, hbar, h and the lattice mass, from `PHYSICS_ROWS`.
 - Figure 2 (geometry): the Spectre and hat inflation factors, checked equal as numbers under the
   stated values of the other letters, the window dimension and the Chair44 contact count.
-- Figure 3 (transmutation): slopes, coupling and mass, plus correspondence arrows between the O(N)
-  and Yang-Mills exponents; the Yang-Mills exponent 1/(2 b_0 g^2) equals r_g*beta is checked.
+- Figure 3 (transmutation): slopes, coupling and mass, with the O(N) scaling form joined to the gauge-theory
+  lattice mass only by arrows taken from the library's links (never by `=`; `NOT_IDENTICAL` in `concise.py` enforces it); the Yang-Mills exponent 1/(2 b_0 g^2) equals r_g*beta is checked.
 
 Every term is substituted back into its source equation and must give an identity; a failure raises, so
 nothing unverified is written. The pivots are named, not computed, because "every family" does not fit
