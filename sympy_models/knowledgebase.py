@@ -499,6 +499,14 @@ PREPRINTS = Path(__file__).resolve().parent.parent / "preprints"
 # key -> (tag used in the models' source strings, CONTENTS entry, preprint directory)
 MANUSCRIPTS = {
     "oai-penrose": ("Pen", "260", "Spacetime-Penrose-inequalities-enclosing-area-charge-and-rigidity-October-5-2026"),
+    "oai-kerr-w12": ("K2", "264", "Generic-Future-Inextendibility-with-Square-Integrable-Connection-Near-a-Fixed-Kerr-Spacetime-September-23-2026"),
+    "oai-kerr-c1": ("K1", "264", "Generic-C1-Future-Inextendibility-Near-Rotating-Subextremal-Kerr-Spacetimes-September-23-2026"),
+    "oai-kerr-c2": ("K0", "264", "Quantitative-Near-Kerr-Evolution-and-Generic-C2-Future-Inextendibility-September-23-2026"),
+    "oai-fk-sub": ("FKs", "211", "Canonical-conformal-limits-of-subcritical-FK-planar-maps-September-24-2026"),
+    "oai-fk-q4": ("FK4", "211", "The-critical-Liouville-quantum-sphere-and-geometric-limits-of-FK-maps-at-q-equals-4-September-24-2026"),
+    "oai-fk-metric": ("FKm", "211", "Metric-measure-limits-of-subcritical-FK-and-spanning-tree-planar-maps-September-24-2026"),
+    "oai-fk-walk": ("FKw", "211", "Random-Walks-on-Critical-FK-Ising-Maps-and-Liouville-Brownian-Motion-October-5-2026"),
+    "oai-fk-spectral": ("FKe", "211", "Spectral-convergence-for-critical-FK-Ising-planar-maps-October-5-2026"),
     "oai-einstein4": ("E4", "348", "Positively-curved-Einstein-four-manifolds-September-23-2026"),
     "oai-einstein-gap": ("EG", "348", "An-L2-Einstein-Gap-for-Nonnegatively-Curved-Four-Manifolds-October-5-2026"),
     "oai-zero-plane": ("ZP", "348", "Zero-Plane-Rigidity-for-Einstein-Four-Manifolds-October-4-2026"),
