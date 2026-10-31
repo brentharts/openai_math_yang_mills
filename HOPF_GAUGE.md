@@ -80,4 +80,5 @@ Each check raises on failure, so a model that does not reproduce its numbers sto
 ## See also
 
 - [YANGMILLS.md](YANGMILLS.md): the status of the reported claim and the companion tooling.
+- [YM_CONNECTIONS.md](YM_CONNECTIONS.md): all the connections to Yang–Mills the fork has checked, ranked by strength.
 - [sympy_models/README.md](sympy_models/README.md): the model table and the labels.

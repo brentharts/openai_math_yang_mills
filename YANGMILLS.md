@@ -57,6 +57,8 @@ Two other repositories work on the Yang-Mills side of this question with code, a
 
 - [HopfFibration](https://github.com/brentharts/HopfFibration) and [quantum-lattice](https://github.com/brentharts/quantum-lattice) are Hopf-fibration and Hopf-insulator tooling. They are not about Yang-Mills; [HOPF_GAUGE.md](HOPF_GAUGE.md) records the fork's symbolic checks of them and of the textbook BPST instanton, with the limits stated: the insulator's band gap and the instanton number are unrelated to a mass gap.
 
+- [CICY](https://github.com/brentharts/CICY) holds exact tree-level gluon amplitudes and the one-loop gauge-coupling running. [YM_CONNECTIONS.md](YM_CONNECTIONS.md) lists every connection of this kind with its strength and its limits; none touches the mass gap.
+
 These are numerical and bookkeeping aids. The gap noted above, between two-dimensional sigma models and four-dimensional Yang-Mills, is unchanged.
 
 Neutral overview of the problem and its status: [nLab: Yang-Mills mass gap](https://ncatlab.org/nlab/show/Yang-Mills+mass+gap).
