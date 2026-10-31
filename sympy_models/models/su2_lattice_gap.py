@@ -228,7 +228,7 @@ def build_and_verify():
     sig_expected = sp.Rational(3, 2) * w + sp.Rational(3, 4) * w**2 + sp.Rational(3, 16) * w**3 - sp.Rational(9, 16) * w**4
 
     eq_sigma = register(NAME, Equation(
-        key="su2_string_tension_2d", entry=ENTRY,
+        key="su2_string_tension_2d", entry=ENTRY, cites=["eriksson2026"],
         title="Two-dimensional SU(2): string tension, ring spectrum and Casimir scaling",
         source_kind="derived", source=f"derived here from su2_char_coeff; {DZ}; torus partition function by the heat-kernel/character sum",
         latex_str=(r"\sigma(\beta)=-\ln\frac{I_2(\beta)}{I_1(\beta)}=\frac{3}{2\beta}+\frac{3}{4\beta^{2}}+\frac{3}{16\beta^{3}}"
@@ -240,7 +240,9 @@ def build_and_verify():
               "sense of a finite mass: this is the opposite of the two-dimensional O(3) model, whose gap is finite "
               "and appears by dimensional transmutation. The continuum limit (beta -> infinity with beta a^2 fixed) "
               "exists trivially because the theory is super-renormalizable, with sigma = g^2 a^2 (3/8) in lattice "
-              "units. No asymptotic freedom, no running coupling.",
+              "units. No asymptotic freedom, no running coupling. Compare, not used: the Eriksson Programme "
+              "(papers/bessel-amos-fh) records a Lean-checked result that the two-dimensional Wilson sector gaps "
+              "decrease strictly in beta, the direction of the series above; the fork neither reruns nor uses it.",
     ))
     check(NAME, "large-argument series of the Bessel ratio gives sigma = 3/(2b) + 3/(4b^2) + 3/(16b^3) - 9/(16b^4) + O(b^-5)",
           sp.simplify(sig_series - sig_expected) == 0, eq=eq_sigma)
