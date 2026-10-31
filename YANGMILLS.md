@@ -50,10 +50,12 @@ A full-text scan of all 751 preprint PDFs (details in [HIERARCHIES.md](HIERARCHI
 
 ## Companion tooling outside this repository
 
-Two other repositories work on the Yang-Mills side of this question with code. Neither is part of the OpenAI release, and neither claims to prove existence or a mass gap.
+Two other repositories work on the Yang-Mills side of this question with code, and two more are listed below only because the fork checks them next to a classical instanton. None is part of the OpenAI release, and none claims to prove existence or a mass gap.
 
 - [yang-mills-mass-gap-lab](https://github.com/brentharts/yang-mills-mass-gap-lab) (fork of Michael Elsbernd's `ymlab`) is a finite-lattice SU(2) and SU(3) simulation laboratory with Wilson loops, Creutz ratios and correlator analysis. An added findings page compares the asymptotic-freedom scaling of this repository's 2D O(N) Monte Carlo ([tools/on_model_mc.py](tools/on_model_mc.py)) with small 4D SU(2) lattices: the O(N) local slopes of ln m approach the leading asymptotic-freedom form from below as the correlation length grows to about ten lattice spacings, while the SU(2) lattices scanned are not in the scaling regime.
 - [RosettaMath](https://github.com/brentharts/RosettaMath) holds a knowledge graph of physics equations. Its "Lattice spin models" group takes nine equations from this repository's tools (O(N) mass scaling, Kosterlitz flow, Bloch magnon density, Haldane gap and others) and cites them to this repository by tool, with a bridge module that evaluates them with its own algebra and compares against the numbers `make models` produces here.
+
+- [HopfFibration](https://github.com/brentharts/HopfFibration) and [quantum-lattice](https://github.com/brentharts/quantum-lattice) are Hopf-fibration and Hopf-insulator tooling. They are not about Yang-Mills; [HOPF_GAUGE.md](HOPF_GAUGE.md) records the fork's symbolic checks of them and of the textbook BPST instanton, with the limits stated: the insulator's band gap and the instanton number are unrelated to a mass gap.
 
 These are numerical and bookkeeping aids. The gap noted above, between two-dimensional sigma models and four-dimensional Yang-Mills, is unchanged.
 
