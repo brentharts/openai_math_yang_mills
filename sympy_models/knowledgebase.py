@@ -529,6 +529,7 @@ PSEUDO_ENTRIES = {   # key -> (short label for tables, section title)
     "hopf-insulator": ("HI", "The three-dimensional Hopf insulator (companion repository)"),
     "cicy-gauge": ("CG", "Gluon amplitudes and gauge-coupling running (companion repository CICY)"),
     "forest-gauge": ("FG", "Strong-coupling lattice gauge theory in a forest gauge (companion repository)"),
+    "su2-lattice-gap": ("SU", "Exactly computable SU(2) lattice gauge theories: a 2D string tension, a one-plaquette gap and a two-plaquette ladder (fork)"),
 }
 
 # References outside the OpenAI release, as the fork's notes cite them (SPECTRE_CHAIR44.md, "Citation key").
