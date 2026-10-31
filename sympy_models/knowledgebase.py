@@ -525,6 +525,8 @@ ROSETTAMATH = {
 PSEUDO_ENTRIES = {   # key -> (short label for tables, section title)
     "spectre-chair44": ("SC", "The Spectre, Chair44 and the clock tests (companion notes)"),
     "chirality-lisi": ("CL", "Chirality, E8 and Lisi's triality (companion repository)"),
+    "hopf-fibration": ("HF", "The Hopf fibration, closed forms and linking (companion repository)"),
+    "hopf-insulator": ("HI", "The three-dimensional Hopf insulator (companion repository)"),
 }
 
 # References outside the OpenAI release, as the fork's notes cite them (SPECTRE_CHAIR44.md, "Citation key").
@@ -559,6 +561,18 @@ EXTERNAL = {
         title="Division Algebras, Triality, and Exceptional Magic",
         year=2026, url="https://arxiv.org/abs/2609.12112", note="arXiv:2609.12112v1; Adv. Appl. Clifford Algebras 36, 45 (2026).",
         status="Read only in part by the companion repository (pages 1-11 and 25-44)."),
+    "moore-ran-wen": dict(
+        tag="MRW", entry="hopf-insulator", authors="J. E. Moore, Y. Ran and X.-G. Wen",
+        title="Topological surface states in three-dimensional magnetic insulators",
+        year=2008, url="https://arxiv.org/abs/0804.4527", doi="10.1103/PhysRevLett.100.186805",
+        note="arXiv:0804.4527; Phys. Rev. Lett. 100, 186805 (2008). Quoted for the Hopf-invariant classification.",
+        status="Published; not re-derived here."),
+    "deng-wang-shen-duan": dict(
+        tag="DWSD", entry="hopf-insulator", authors="D.-L. Deng, S.-T. Wang, C. Shen and L.-M. Duan",
+        title="Hopf insulators and their topologically protected surface states",
+        year=2013, url="https://arxiv.org/abs/1307.7206", doi="10.1103/PhysRevB.88.201105",
+        note="arXiv:1307.7206; Phys. Rev. B 88, 201105(R) (2013). The tight-binding model with invariants 0, -1, 2.",
+        status="Published; the companion repository checks the model numerically, this fork the closed forms."),
     "lisi-2007": dict(
         tag="Lisi07", entry="chirality-lisi", authors="A. G. Lisi",
         title="An Exceptionally Simple Theory of Everything",
