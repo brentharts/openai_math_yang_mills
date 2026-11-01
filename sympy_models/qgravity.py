@@ -192,12 +192,12 @@ SELECTED = (
 )
 
 # every registered result the paper needs; if one is missing (a partial run of export.py) the paper is skipped, not half-built
-QG_MODELS = ("qg_spin_network", "qg_einstein4", "su2_lattice_strip", "qg_volume", "qg_penrose", "su2_lattice_lshape", "forest_gauge_4d_theorems", "qg_kerr", "qg_planar_maps")   # the models whose checks the paper counts as its own
+QG_MODELS = ("qg_spin_network", "qg_einstein4", "su2_lattice_strip", "su2_peter_weyl", "su2_lattice_stripn", "qg_volume", "qg_penrose", "su2_lattice_lshape", "forest_gauge_4d_theorems", "qg_kerr", "qg_planar_maps")   # the models whose checks the paper counts as its own
 REQUIRED = ("su2_ladder_basis", "su2_ladder_weak", "su2_ladder_strong", "su2_ladder_gap",
             "qg_area_spectrum", "qg_casimir_dictionary", "qg_intertwiners", "qg_entropy_immirzi",
             "qg_quantum_tetrahedron", "qg_ladder_geometry",
             "qg_so4_casimirs", "qg_einstein_blocks", "qg_einstein_topology",
-            "su2_strip_basis", "su2_strip_weak", "su2_strip_strong", "su2_strip_gap",
+            "su2_strip_basis", "su2_stripn_basis", "su2_strip_weak", "su2_strip_strong", "su2_strip_gap",
             "qg_volume_triple_product", "qg_volume_spectra", "qg_volume_semiclassical", "qg_volume_l_shape",
             "qg_penrose_equality", "qg_penrose_quantum",
             "su2_lshape_basis", "su2_lshape_volume", "su2_lshape_gap",
@@ -712,6 +712,7 @@ def write(out_dir: Path, eqs) -> list[Path]:
     sw, _ = show(by_key["su2_strip_weak"])
     ss, _ = show(by_key["su2_strip_strong"])
     sg, _ = show(by_key["su2_strip_gap"])
+    sn, _ = show(by_key["su2_stripn_basis"])
     basis, c5 = show(by_key["su2_ladder_basis"])
     geom, c6 = show(by_key["qg_ladder_geometry"])
     ent, c7 = show(by_key["qg_entropy_immirzi"])
@@ -860,6 +861,18 @@ def write(out_dir: Path, eqs) -> list[Path]:
     lines.append("The ordering holds on the grid $g^2=0.25$--$8$; the ratio to the one-plaquette gap is $0.835$ at $g^2=0.25$, against the limit "
                  "$0.8040$, and $0.99995$ at $g^2=8$. The three volumes say nothing about a larger or infinite system, and, like the ladder's, "
                  "the gap here is that of a gauge-theory Hamiltonian on a small lattice.\n")
+    lines.append("\\paragraph{Four and five plaquettes.} The same graph, a ladder of squares, gives $3N-3$ labels for $N$ plaquettes, and the display "
+                 "gives the Hamiltonian, with a phase $\\sigma_p$ that extends the three-plaquette rule by a factor $(-1)^{(k_t-k_b)/2}$ for each "
+                 "interior neighbour. That extension is a conjecture, and it is tested rather than derived.\n")
+    lines.append(sn)
+    lines.append("The test is an independent construction with no $6j$ symbol and no phase: wavefunctions of the $N$ loop holonomies, with the "
+                 "link electric fields from the Peter--Weyl decomposition and gauge invariance enforced by a penalty. It reproduces the ladder "
+                 "exactly at $N=2$ and the strip module at $N=3$. At $g^2=2$ the spin-network builder and the independent construction agree on "
+                 "the lowest four levels to $2\\times10^{-6}$ at $N=4$ (ground state $3.67192$) and $10^{-3}$ at $N=5$ (ground state $4.5899$, "
+                 "limited by the cut), and the plaquette operators commute away from the cut. The weak-coupling gap formula "
+                 "$2\\sqrt{2-\\cos(\\pi/(N+1))}$ ($2.1827$ at $N=4$, $2.1297$ at $N=5$) is \\emph{not} tested: at $g^2=0.8$--$0.4$ the $N=4$ "
+                 "gap is still falling with the energy cut ($2.84\\to2.49$ at $g^2=0.4$ between cuts $24$ and $32$), and $N=5$ was too slow "
+                 "to converge, so no extrapolation is claimed.\n")
 
     lines.append("\\section{Counting punctures and the Immirzi parameter}\\label{sec:entropy}\n"
                  "If a horizon of area $A$ is pierced by $N$ links of spin $\\tfrac12$, its area is $N$ times the smallest value, and the "
