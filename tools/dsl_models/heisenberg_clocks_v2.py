@@ -8,11 +8,15 @@ from oai_tree import family   # the generated class of family 271 (the quantum H
 R_READING = "the exponent, which is also the factorial's argument and the binomial's lower index"
 
 
+_MAIN = family("271").results["OAI.Heisenberg.spontaneous_magnetization"]   # the family's Comparator challenge, a generated Item
+
+
 @lean.category(
     r'''
     \textbf{Heisenberg/ClockTails.lean} of the OpenAI release, written in the leandsl DSL. It is a module behind the Lean
-    proof of the family's main theorem (the import analysis finds it in the family's closure).
-    ''',
+    proof of the family's main theorem %s (the import analysis finds it in the family's closure); the family itself
+    is [[F271|family 271]]. The two items below are linked to each other, and to the prose, by their labels.
+    ''' % _MAIN.latex_ref(page=True),
     title="Heisenberg clock tails",
 )
 class HeisenbergClockTails(family("271")):
@@ -71,12 +75,12 @@ def clock_tail_chain(N, r, B, delta):
            r"$2B\delta n/(r/e)\le 1/2$ from $4eB\delta n\le r$, and \texttt{pow\_le\_pow\_left}"),
     )
 
-# a category that depends on another one: lookups see the inherited items
+# a category that depends on another one: lookups see the inherited items, and the links are made from the labels
 @lean.category(
     r'''
-    \section{ Summary }
-    The tail bound %s is built on the lemma %s.
-    ''' % (HeisenbergClockTails.theorems.clock_tail.toLatex(), HeisenbergClockTails.lemmas.factorial_lower.toLatex()),
+    The tail bound %s is built on the lemma %s. Both are declared in [[HeisenbergClockTails]], which this class extends;
+    here they are reached as attributes of the subclass: \texttt{ClockTailsSummary.clock\_tail} is the item of that class.
+    ''' % (HeisenbergClockTails.clock_tail.latex_ref(page=True), HeisenbergClockTails.factorial_lower.latex_ref(page=True)),
 )
 class ClockTailsSummary(HeisenbergClockTails):
     pass
