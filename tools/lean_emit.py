@@ -199,6 +199,7 @@ class Theorem:
     doc: str = ""
     tactic: str = "sorry"
     features: set = field(default_factory=set)
+    given: list = field(default_factory=list)       # (name, Lean statement): hypotheses that are relations
 
     def text(self) -> str:
         groups: dict[str, list[str]] = {}
@@ -206,6 +207,7 @@ class Theorem:
             groups.setdefault(b.type, []).append(b.lean)
         binder_text = " ".join(f"({' '.join(names)} : {t})" for t, names in groups.items())
         hyps = [f"({h} : {p})" for b in self.binders for h, p in b.hypotheses()]
+        hyps += [f"({h} : {p})" for h, p in self.given]
         head = " ".join(x for x in [f"theorem {self.name}", binder_text, *hyps] if x)
         out = []
         if self.doc:
@@ -222,13 +224,18 @@ def theorem_name(key: str) -> str:
 
 
 def build_theorem(key: str, rel, binders: list[Binder], flavor: str, doc: str = "",
-                  tactic: str = "sorry") -> Theorem:
-    """A statement tree as a theorem. Raises Unreadable if it cannot be printed."""
+                  tactic: str = "sorry", given: list | None = None) -> Theorem:
+    """A statement tree as a theorem. Raises Unreadable if it cannot be printed.
+
+    ``given`` is a list of ``(hypothesis name, relation tree)``: relations assumed before the
+    conclusion, as ``(hR : ... ≤ ...)``. Their symbols are quantified like the conclusion's.
+    """
     table = {b.name: b for b in binders}
     em = Emitter(flavor, table)
     stmt = em.statement(rel)
-    used = [b for b in binders if _mentions(rel, b.name)]
-    return Theorem(theorem_name(key), stmt, used, doc, tactic, em.features)
+    hyps = [(name, em.statement(tree)) for name, tree in (given or [])]
+    used = [b for b in binders if _mentions(rel, b.name) or any(_mentions(t, b.name) for _, t in (given or []))]
+    return Theorem(theorem_name(key), stmt, used, doc, tactic, em.features, hyps)
 
 
 def _mentions(node, name: str) -> bool:
@@ -448,6 +455,12 @@ def selftest() -> int:
     nested = build_theorem("n", tree, [Binder("omega"), Binder("hbar"), Binder("m")], "mathlib",
                            doc="a/-b and c-/d").text()
     ok(nested.count("/-") == 1 and nested.count("-/") == 1, "a stray comment delimiter in a doc cannot nest: " + nested)
+
+    # hypotheses that are relations
+    hyp_tree, concl_tree = parse(r"4 x y \leq r"), parse(r"z \leq \frac{1}{2}")
+    th = build_theorem("given", concl_tree, [Binder("x"), Binder("y"), Binder("r"), Binder("z")], "mathlib",
+                       given=[("hR", hyp_tree)]).text()
+    ok("(hR : (4 * x * y : ℝ) ≤ r)" in th and "(x y r z : ℝ)" in th, th)
 
     # names
     ok(ident("k_B") == "k_B" and ident("exp") == "exp_" and ident("1x") == "v1x", "identifiers")
