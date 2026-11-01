@@ -278,6 +278,7 @@ EDGE_KINDS = {
     "cites": ("cites", "is cited by"),
     "shares": ("shares Lean modules with", "shares Lean modules with"),
     "mentions": ("mentions", "is mentioned by"),
+    "inherits": ("inherits from", "is inherited by"),     # recorded by Python itself: ``class C(A, B)``
 }
 
 
@@ -713,6 +714,15 @@ class Item:
                 self.links.append(Link(kind, self, o, note))
         return self
 
+    def latex_label(self) -> str:
+        """The LaTeX label of this item's subsection: ``<category label>:<thm|lem|res|def>:<name>``."""
+        return item_label(self)
+
+    def latex_ref(self, text: str | None = None, page: bool = False) -> str:
+        """A hyperlink to this item's subsection, for prose: ``A.some_function.latex_ref()``. ``text`` replaces the
+        link text (default: the name); ``page=True`` adds the page number."""
+        return _ref(self.latex_label(), text if text is not None else f"\\texttt{{{_brk(self.name)}}}", page)
+
     def chain(self, fn=None, *, title: str = ""):
         """``@item.chain`` on a function of the item's parameters returning ``chain(a, le(b, why), ...)``.
         Each step is decided by sympy where it can be, else sampled at points satisfying the hypotheses; a
@@ -855,6 +865,7 @@ class _Registry:
                   lean_stmt=lean.strip(), refs=_refs(refs))
         self._items[name] = it
         REGISTRY.append(it)
+        _expose(self._owner, name, it)
         return it
 
     def __call__(self, fn=None, *, lean=None, source="", doc="", proof="sorry", name=None, refs=(), reads=None):
@@ -876,6 +887,7 @@ class _Registry:
                       refs=_refs(refs), reads=rd)
             self._items[nm] = it
             REGISTRY.append(it)
+            _expose(self._owner, nm, it)
             return it
         return deco(fn) if fn else deco
 
@@ -908,6 +920,20 @@ class _Registry:
                 for n in klass.__dict__[self._kind + "s"]._items]
 
 
+_RESERVED = {"lemmas", "theorems", "results", "items", "connect", "linked_from", "toLatex", "latex_ref", "latex_label"}
+
+
+def _expose(owner: type, name: str, it) -> None:
+    """Make ``Cat.name`` the item itself, so ``A.some_function.latex_ref()`` works and a subclass ``C(A, B)`` finds it
+    through Python's own attribute lookup. A name that clashes with a method, or that a lemma and a theorem share,
+    stays reachable through ``Cat.lemmas.name`` / ``Cat.theorems.name`` only."""
+    if name.startswith("_") or not name.isidentifier() or name in _RESERVED or name in owner.__dict__:
+        return
+    cur = getattr(owner, name, None)
+    if cur is None or isinstance(cur, Item):
+        setattr(owner, name, it)
+
+
 def _category_connect(cls, *others, kind: str = "uses", note: str = ""):
     """``Cat.connect(Other, kind="cites", note="...")``: how this category relates to others (documentation)."""
     if kind not in EDGE_KINDS:
@@ -933,6 +959,11 @@ def _install_category(cls: type, doc: str | None = None, refs=(), title: str = "
         cls.results = _Registry("result", cls)
         cls.__links__ = []
         CATEGORIES.append(cls)
+        for b in cls.__bases__:                            # ``class C(A, B)`` is a connection between categories
+            if b in CATEGORIES:
+                cls.__links__.append(Link("inherits", cls, b))
+        cls.latex_ref = classmethod(lambda c, text=None, page=False: _cat_ref(c, text, page))
+        cls.latex_label = classmethod(lambda c: cat_label(c))
         cls.__init_subclass__ = classmethod(lambda sub, **kw: _install_category(sub))
         cls.items = classmethod(lambda c: list(c.lemmas) + list(c.theorems) + list(c.results))
         cls.connect = classmethod(_category_connect)
@@ -1004,12 +1035,199 @@ def _brk(x: str) -> str:
     return _esc(x).replace(".", ".\\allowbreak{}").replace("\\_", "\\_\\allowbreak{}")
 
 
+# ---- labels and references ----------------------------------------------------------------------
+# Every category and every item has a LaTeX label, made from names alone, so that any piece of the generated text can
+# link to any other: ``A.some_function.latex_ref()`` in Python, ``[[A.some_function]]`` inside the LaTeX of a ``doc=``
+# or docstring (resolved when the document is made, so it may point forward). The document needs TEX_PREAMBLE.
+TEX_PREAMBLE = r"\providecommand{\dsllabel}[1]{\phantomsection\label{#1}}"
+_LABEL_BAD = re.compile(r"[^A-Za-z0-9:._-]+")
+_KIND_TAG = {"theorem": "thm", "lemma": "lem", "result": "res", "def": "def"}
+
+
+class RefError(ValueError):
+    """A ``[[...]]`` reference that names no category or item (or more than one)."""
+
+
+def cat_label(c) -> str:
+    """The label of a category: the one given to ``@lean.category(label=)``, else ``cat:<ClassName>``."""
+    return c.__dict__.get("__lean_label__") or "cat:" + _LABEL_BAD.sub("-", c.__name__)
+
+
+def item_label(it) -> str:
+    owner = cat_label(it.category) if it.category is not None else "dsl"
+    return f"{owner}:{_KIND_TAG.get(it.kind, it.kind[:3])}:{_LABEL_BAD.sub('-', it.name).strip('-')}"
+
+
+def _ref(label: str, text: str, page: bool = False) -> str:
+    return f"\\hyperref[{label}]{{{text}}}" + (f" (p.~\\pageref{{{label}}})" if page else "")
+
+
+def _cat_ref(c, text: str | None = None, page: bool = False) -> str:
+    """How another category refers to ``c``: a hyperlink to its label."""
+    return _ref(cat_label(c), text if text is not None else (c.__dict__.get("__lean_title__") or c.__name__.replace("_", "\\_")), page)
+
+
+def _literal(c) -> bool:
+    """Generated from the release's own files: its text is printed as it is, with no ``[[...]]`` and no inheritance notes."""
+    return bool(c.__dict__.get("__lean_literal__"))
+
+
+_TOKEN = re.compile(r"\[\[([A-Za-z_]\w*(?:\.[A-Za-z_]\w*){0,2})(?:\|([^\]]*))?\]\]")
+
+
+def _cat_named(name: str):
+    hits = [c for c in CATEGORIES if c.__name__ == name]
+    if not hits:
+        raise RefError(f"[[{name}]]: no category with that class name")
+    if len(hits) > 1:
+        raise RefError(f"[[{name}]]: {len(hits)} categories have that class name")
+    return hits[0]
+
+
+def resolve_refs(text: str) -> str:
+    """``[[Cat]]``, ``[[Cat.item]]``, ``[[Cat.theorems.item]]`` (all with an optional ``|link text``) become hyperlinks.
+    A reference that names nothing raises RefError, so a misspelt link is found when the document is made."""
+    def sub(m):
+        path, label = m.group(1).split("."), m.group(2)
+        cat = _cat_named(path[0])
+        if len(path) == 1:
+            return cat.latex_ref(label)
+        if len(path) == 3:
+            if path[1] not in ("lemmas", "theorems", "results"):
+                raise RefError(f"[[{m.group(1)}]]: the middle part must be lemmas, theorems or results")
+            hit = getattr(cat, path[1])._find(path[2])
+            if hit is None:
+                raise RefError(f"[[{m.group(1)}]]: {cat.__name__}.{path[1]} has no '{path[2]}'")
+            return hit.latex_ref(label)
+        hits = [h for k in ("lemmas", "theorems", "results") if (h := getattr(cat, k)._find(path[1])) is not None]
+        if not hits:
+            raise RefError(f"[[{m.group(1)}]]: {cat.__name__} has no item '{path[1]}'")
+        if len(hits) > 1:
+            raise RefError(f"[[{m.group(1)}]]: ambiguous ({' and '.join(h.kind for h in hits)}); write {cat.__name__}.theorems.{path[1]} or .lemmas.")
+        return hits[0].latex_ref(label)
+    return _TOKEN.sub(sub, text)
+
+
+def _group_end(s: str, i: int) -> int:
+    """Index just after the brace group that opens at ``s[i]`` (an escaped brace does not count)."""
+    depth, j = 0, i
+    while j < len(s):
+        c = s[j]
+        if c == "\\":
+            j += 2
+            continue
+        depth += (c == "{") - (c == "}")
+        j += 1
+        if depth == 0:
+            return j
+    return len(s)
+
+
+_DEFINED = re.compile(r"\\(?:label|dsllabel)\{([^{}]*)\}")
+
+
+def check_labels(doc: str) -> dict:
+    """The labels a LaTeX text defines and uses: ``dangling`` (used, never defined) and ``duplicate`` (defined twice)."""
+    defined = _DEFINED.findall(doc)
+    used = set(re.findall(r"\\hyperref\[([^\]]*)\]", doc)) | set(re.findall(r"\\pageref\{([^{}]*)\}", doc))
+    return {"defined": len(set(defined)), "dangling": sorted(used - set(defined)),
+            "duplicate": sorted({x for x in defined if defined.count(x) > 1})}
+
+
+def close_refs(doc: str):
+    """``(doc, dangling)``: a link to a label the text does not define becomes plain text, so that a document
+    holding part of the tree has no broken links; ``dangling`` lists those labels."""
+    defined = set(_DEFINED.findall(doc))
+    out, dangling, i = [], [], 0
+    while True:
+        j = doc.find("\\hyperref[", i)
+        if j < 0:
+            out.append(doc[i:])
+            break
+        k = doc.find("]", j)
+        if k < 0 or doc[k + 1:k + 2] != "{":
+            out.append(doc[i:k + 1 if k >= 0 else len(doc)])
+            i = k + 1 if k >= 0 else len(doc)
+            continue
+        label, e = doc[j + 10:k], _group_end(doc, k + 1)
+        out.append(doc[i:j])
+        if label in defined:
+            out.append(doc[j:e])
+        else:
+            out.append(doc[k + 2:e - 1])
+            dangling.append(label)
+        i = e
+    res = "".join(out)
+    for lab in set(dangling):
+        res = res.replace(f" (p.~\\pageref{{{lab}}})", "")
+    return res, sorted(set(dangling))
+
+
+def graph(cats=None) -> dict:
+    """The tree as data: ``nodes`` (categories and their items, by label) and ``edges`` (``inherits``, the connections
+    of categories and of items), for drawing or for counting."""
+    cats = CATEGORIES if cats is None else list(cats)
+    nodes, edges = [], []
+    for c in cats:
+        nodes.append({"id": cat_label(c), "type": "category", "name": c.__name__, "title": c.__dict__.get("__lean_title__", "")})
+        edges += [{"kind": l.kind, "src": cat_label(l.src), "dst": cat_label(l.dst), "note": l.note} for l in c.__dict__.get("__links__", [])]
+        for it in c.items():
+            if it.category is not c:
+                continue
+            nodes.append({"id": item_label(it), "type": it.kind, "name": it.name, "category": cat_label(c)})
+            edges += [{"kind": l.kind, "src": item_label(it), "dst": item_label(l.dst), "note": l.note} for l in it.links]
+    return {"nodes": nodes, "edges": edges}
+
+
+def _inherited(cat) -> list:
+    """``[(defining category, [items])]``: what ``cat`` gets from the categories it extends, nearest first,
+    leaving out a name that a nearer category already defines."""
+    seen = {(k, n) for k in ("lemmas", "theorems", "results") for n in cat.__dict__[k]._items}
+    out = []
+    for klass in cat.__mro__[1:]:
+        got = []
+        for k in ("lemmas", "theorems", "results"):
+            reg = klass.__dict__.get(k)
+            if isinstance(reg, _Registry):
+                for it in reg:
+                    if (k, it.name) not in seen:
+                        seen.add((k, it.name))
+                        got.append(it)
+        if got:
+            out.append((klass, got))
+    return out
+
+
+def _inheritance_tex(cat, limit: int = 12) -> str:
+    if _literal(cat):
+        return ""
+    own, inc = cat.__dict__.get("__links__", []), _category_linked_from(cat)
+    bases = [l.dst for l in own if l.kind == "inherits"]
+    subs = [l.src for l in inc if l.kind == "inherits" and not _literal(l.src)]
+    out = []
+    if bases:
+        out.append("Extends " + ", ".join(_cat_ref(b, page=True) for b in bases) + ".")
+    if subs:
+        out.append("Extended by " + ", ".join(_cat_ref(s, page=True) for s in subs) + ".")
+    shown = 0
+    for klass, its in _inherited(cat):
+        take = its[:max(0, limit - shown)]
+        shown += len(take)
+        if take:
+            more = f" and {len(its) - len(take)} more" if len(its) > len(take) else ""
+            out.append(f"Inherited from {_cat_ref(klass)}: " + ", ".join(i.latex_ref() for i in take) + more + ".")
+    return ("\n".join(out) + "\n") if out else ""
+
+
 def _item_tex(it, v2: bool = False, level: str = "subsection") -> str:
-    head = f"\\{level}*{{\\texttt{{{_brk(it.name)}}}}}\n"
+    lit = it.category is not None and _literal(it.category)
+    fix = (lambda t: t) if lit or not v2 else resolve_refs
+    anchor = f"\\dsllabel{{{item_label(it)}}}" if v2 else ""
+    head = f"{anchor}\\{level}*{{\\texttt{{{_brk(it.name)}}}}}\n"
     if it.source:
         head += f"Source: \\texttt{{{_brk(it.source)}}}\\\\\n"
     if v2 and it.doc:
-        head += it.doc + "\n"
+        head += fix(it.doc) + "\n"
     if it.kind == "result":
         out = head + "{\\footnotesize\n\\begin{verbatim}\n" + it.lean_stmt + "\n\\end{verbatim}}\n"
         if it.refs:
@@ -1020,13 +1238,13 @@ def _item_tex(it, v2: bool = False, level: str = "subsection") -> str:
         syms = {p.name: p for p, _ in it.params}
         out += "Here " + ", ".join(f"${tex(syms[k])}$ denotes {_esc(v)}" for k, v in it.reads.items()) + ".\n"
     if v2 and it.extra:
-        out += it.extra + "\n"
+        out += fix(it.extra) + "\n"
     if v2:
         for l in it.links:
-            out += f"This {it.kind} {EDGE_KINDS[l.kind][0]} \\texttt{{{_esc(l.dst.name)}}} ({l.dst.kind})" \
+            out += f"This {it.kind} {EDGE_KINDS[l.kind][0]} {l.dst.latex_ref()} ({l.dst.kind})" \
                    f"{': ' + l.note if l.note else ''}.\n"
         for l in it.linked_from():
-            out += f"It {EDGE_KINDS[l.kind][1]} \\texttt{{{_esc(l.src.name)}}} ({l.src.kind}).\n"
+            out += f"It {EDGE_KINDS[l.kind][1]} {l.src.latex_ref()} ({l.src.kind}).\n"
         for c in it.chains:
             out += chain_tex(c)
         if it.refs:
@@ -1034,26 +1252,25 @@ def _item_tex(it, v2: bool = False, level: str = "subsection") -> str:
     return out
 
 
-def _cat_ref(c) -> str:
-    """How another category refers to ``c``: a hyperlink to its label when it has one."""
-    title = c.__dict__.get("__lean_title__") or c.__name__.replace("_", "\\_")
-    label = c.__dict__.get("__lean_label__")
-    return f"\\hyperref[{label}]{{{title}}}" if label else title
-
-
 def _category_links_tex(cat) -> str:
-    rows = [f"\\item it {EDGE_KINDS[l.kind][0]} {_cat_ref(l.dst)}{': ' + l.note if l.note else ''}"
-            for l in cat.__dict__.get("__links__", [])]
-    rows += [f"\\item it {EDGE_KINDS[l.kind][1]} {_cat_ref(l.src)}{': ' + l.note if l.note else ''}"
-             for l in _category_linked_from(cat)]
-    return ("\\par\\medskip\\noindent\\textbf{Connections:}\n\\begin{itemize}\n" + "\n".join(rows) + "\n\\end{itemize}\n") if rows else ""
+    rows = [f"\\item it {EDGE_KINDS[l.kind][0]} {_cat_ref(l.dst, page=True)}{': ' + l.note if l.note else ''}"
+            for l in cat.__dict__.get("__links__", []) if l.kind != "inherits"]
+    rows += [f"\\item it {EDGE_KINDS[l.kind][1]} {_cat_ref(l.src, page=True)}{': ' + l.note if l.note else ''}"
+             for l in _category_linked_from(cat) if l.kind != "inherits"]
+    out = ("\\par\\medskip\\noindent\\textbf{Connections:}\n\\begin{itemize}\n" + "\n".join(rows) + "\n\\end{itemize}\n") if rows else ""
+    inh = _inheritance_tex(cat)
+    return out + (("\\par\\medskip\\noindent " + inh) if inh else "")
 
 
 def category_tex(cat, item_level: str = "subsection", **kw) -> str:
     """LaTeX for one category: its introduction, the class docstring, its connections, then every item."""
     refs = cat.__dict__.get("__lean_refs__", ())
-    parts = [getattr(cat, "__lean_doc__", "") if "__lean_doc__" in cat.__dict__ else "",
-             (cat.__dict__.get("__doc__") or "").strip(),
+    doc = getattr(cat, "__lean_doc__", "") if "__lean_doc__" in cat.__dict__ else ""
+    fix = (lambda t: t) if _literal(cat) else resolve_refs
+    lab = cat_label(cat)
+    anchor = "" if f"\\label{{{lab}}}" in doc else f"\\dsllabel{{{lab}}}"
+    parts = [anchor + fix(doc),
+             fix((cat.__dict__.get("__doc__") or "").strip()),
              ("Further reading: " + ", ".join(r.tex() for r in refs) + ".\n") if refs else "",
              _category_links_tex(cat)]
     parts += [_item_tex(it, v2=True, level=item_level) for it in list(cat.lemmas) + list(cat.theorems) + list(cat.results)]
@@ -1077,7 +1294,7 @@ def render(items=None, flavor="mathlib") -> str:
         body = [one(it) for it in REGISTRY if it.category is None]
         for cat in CATEGORIES:
             its = list(cat.lemmas) + list(cat.theorems) + list(cat.results)
-            if its:
+            if its or cat.__dict__.get("__links__"):
                 links = "".join(f"-- {cat.__name__} {EDGE_KINDS[l.kind][0]} {l.dst.__name__}"
                                 f"{' (' + l.note + ')' if l.note else ''}\n"
                                 for l in cat.__dict__.get("__links__", []))
@@ -1092,7 +1309,7 @@ def tex_fragment(items=None) -> str:
         return "\n".join(_item_tex(it) for it in items)
     out = [_item_tex(it) for it in REGISTRY if it.category is None]
     out += [category_tex(cat) for cat in CATEGORIES]
-    return "\n".join(out)
+    return close_refs("\n".join(out))[0]
 
 
 # ---- selftest ----------------------------------------------------------------------------------
@@ -1205,7 +1422,8 @@ def selftest():
             ok("-- uses: foo (documentation, not a proof dependency)" in t, t)
             ok("namespace B" not in t or "baz" in t.split("namespace B")[1])
             x = tex_fragment()
-            ok("\\section{A}" in x and "extra A" in x and "extra foo" in x and "uses \\texttt{foo} (lemma)" in x and "It is used by \\texttt{bar}" in x, x)
+            ok("\\section{A}" in x and "extra A" in x and "extra foo" in x and "uses \\hyperref[cat:A:lem:foo]{\\texttt{foo}} (lemma)" in x
+               and "It is used by \\hyperref[cat:A:thm:bar]{\\texttt{bar}}" in x, x)
             # ---- references, readings, typed connections ----
             ok(wikipedia("Stirling's approximation").url == "https://en.wikipedia.org/wiki/Stirling%27s_approximation"
                or "Stirling" in wikipedia("Stirling's approximation").url)
@@ -1260,7 +1478,7 @@ def selftest():
             except ValueError:
                 ok(True)
             x = tex_fragment()
-            ok("is a special case of \\texttt{qux}" in x and "take $c=3$" in x and "Here $x$ denotes the first quantity" in x
+            ok("is a special case of \\hyperref[cat:A:lem:qux]{\\texttt{qux}}" in x and "take $c=3$" in x and "Here $x$ denotes the first quantity" in x
                and "\\href{https://doi.org/10.1000/xyz123}" in x, x)
             # ---- inequality chains ----
             @A.lemmas
@@ -1398,14 +1616,79 @@ def selftest():
                and "--   theorem thm_p (n : ℕ) :\n--       n = n" in tl, tl)
             ok("\ntheorem thm_p" not in tl and "lemma thm_p" not in tl, tl)         # only ever a comment
             tp, tq = category_tex(FamP, item_level="subsubsection"), category_tex(FamQ)
-            ok("it cites Family Q: 3 citations" in tp and "\\subsubsection*{\\texttt{thm\\_\\allowbreak{}p}}" in tp
+            ok("it cites \\hyperref[cat:FamQ]{Family Q} (p.~\\pageref{cat:FamQ}): 3 citations" in tp and "\\subsubsection*{\\texttt{thm\\_\\allowbreak{}p}}" in tp
                and "\\begin{verbatim}\ntheorem thm_p (n : ℕ) :\n    n = n\n\\end{verbatim}" in tp and "A result." in tp, tp)
-            ok("it is cited by \\hyperref[fam:P]{Family P}: 3 citations" in tq, tq)
+            ok("it is cited by \\hyperref[fam:P]{Family P} (p.~\\pageref{fam:P}): 3 citations" in tq, tq)
             res2 = FamP.results.declare("thm_q", lean="theorem thm_q : True", source="OAI.Q.Main",
                                         doc="Challenge \\texttt{Qx\\_y}, in module \\texttt{OAI.\\allowbreak{}Q.\\allowbreak{}Main}.")
             ok("-- Challenge Qx_y, in module OAI.Q.Main." in res2.lean() and "\\" not in res2.lean().split("the statement")[0], res2.lean())
             res.connect(foo)                                                   # a result is an Item: ordinary connections work
             ok("-- uses: foo" in res.lean())
+            # ---- labels and references ----
+            ok(res.latex_label() == "fam:P:res:thm_p" and FamP.latex_label() == "fam:P" and FamP.thm_p is res)
+            ok(res.latex_ref() == "\\hyperref[fam:P:res:thm_p]{\\texttt{thm\\_\\allowbreak{}p}}"
+               and res.latex_ref("the result", page=True) == "\\hyperref[fam:P:res:thm_p]{the result} (p.~\\pageref{fam:P:res:thm_p})")
+            ok("\\dsllabel{fam:P:res:thm_p}\\subsubsection*" in tp and tp.startswith("\\dsllabel{fam:P}"), tp[:200])
+
+            @lean.category(r"\section{Alpha}")
+            class Alpha:
+                pass
+
+            @lean.category(r"\section{Beta}")
+            class Beta:
+                pass
+
+            @Alpha.lemmas
+            def some_function(x: Real, y: Real):
+                require(x <= y)
+                return x <= y + 1
+
+            @Beta.theorems
+            def other(x: Real, y: Real):
+                require(x <= y)
+                return x <= y + 2
+
+            class Gamma(Alpha, Beta):
+                """Both are used: [[Alpha.some_function]] and [[Beta.other|the second one]], inside [[Alpha]]."""
+
+            ok(Gamma in CATEGORIES and [(l.kind, l.dst) for l in Gamma.__links__] == [("inherits", Alpha), ("inherits", Beta)])
+            ok(Gamma.some_function is Alpha.some_function and Gamma.other is Beta.other and Gamma.lemmas.some_function is some_function)
+            ok("some_function" not in Gamma.__dict__ and Gamma.latex_label() == "cat:Gamma")
+            tg = category_tex(Gamma)
+            ok("\\hyperref[cat:Alpha:lem:some_function]{\\texttt{some\\_\\allowbreak{}function}}" in tg
+               and "\\hyperref[cat:Beta:thm:other]{the second one}" in tg and "inside \\hyperref[cat:Alpha]{Alpha}" in tg, tg)
+            ok("Extends \\hyperref[cat:Alpha]{Alpha} (p.~\\pageref{cat:Alpha}), \\hyperref[cat:Beta]{Beta} (p.~\\pageref{cat:Beta})." in tg
+               and "Inherited from \\hyperref[cat:Alpha]{Alpha}: \\hyperref[cat:Alpha:lem:some_function]" in tg, tg)
+            ok("Extended by \\hyperref[cat:Gamma]{Gamma}" in category_tex(Alpha), category_tex(Alpha))
+            for bad in ("[[Nope]]", "[[Alpha.missing]]", "[[Alpha.lemmas.other]]", "[[Alpha.rules.x]]"):
+                try:
+                    resolve_refs(bad)
+                    ok(False, bad + " accepted")
+                except RefError:
+                    ok(True)
+            ok(resolve_refs("[[Alpha.some_function]]") == some_function.latex_ref() and resolve_refs("no tokens [[1]] here") == "no tokens [[1]] here")
+            doc_all = tex_fragment()
+            ok(check_labels(doc_all)["dangling"] == [] and check_labels(doc_all)["duplicate"] == [], check_labels(doc_all))
+            part = category_tex(Gamma)
+            ck = check_labels(part)
+            ok("cat:Alpha" in ck["dangling"] and "cat:Gamma" not in ck["dangling"], ck)
+            closed, dang = close_refs(part)
+            ok("\\hyperref" not in closed and "\\pageref" not in closed and "Extends Alpha, Beta." in closed and "cat:Alpha" in dang, closed)
+            ok(close_refs("\\dsllabel{x} \\hyperref[x]{a {b} c} \\hyperref[y]{d {e}} (p.~\\pageref{y})") ==
+               ("\\dsllabel{x} \\hyperref[x]{a {b} c} d {e} (p.~\\pageref{y})".replace(" (p.~\\pageref{y})", ""), ["y"]))
+            gr = graph([Alpha, Beta, Gamma])
+            ok({n["id"] for n in gr["nodes"]} == {"cat:Alpha", "cat:Beta", "cat:Gamma", "cat:Alpha:lem:some_function", "cat:Beta:thm:other"}
+               and {"kind": "inherits", "src": "cat:Gamma", "dst": "cat:Beta", "note": ""} in gr["edges"], gr)
+            ok("-- Gamma inherits from Alpha" in render() and "-- Gamma inherits from Beta" in render())
+
+            @lean.category(r"\section{Gen}")
+            class Gen:
+                __lean_literal__ = True
+
+            class GenKid(Gen):
+                __lean_literal__ = True
+            Gen.results.declare("r1", lean="theorem r1 : True", doc="a [[Not.There]] token printed as it is")
+            ok("[[Not.There]]" in category_tex(Gen) and "Extend" not in category_tex(GenKid) and "Extended by" not in category_tex(Gen))
         finally:
             CATEGORIES[:] = saved_cats
     finally:

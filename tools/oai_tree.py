@@ -174,7 +174,7 @@ def _ident(s: str) -> str:
 
 def root_class() -> type:
     if "root" not in _TREE:
-        cls = type("OpenAICollection", (), {"__doc__": None, "__oai_generated__": True})
+        cls = type("OpenAICollection", (), {"__doc__": None, "__lean_literal__": True, "__oai_generated__": True})
         _TREE["root"] = lean.category("", title="The OpenAI math release", label="oai:root")(cls)
     return _TREE["root"]
 
@@ -182,7 +182,7 @@ def root_class() -> type:
 def discipline_class(name: str) -> type:
     key = ("d", name)
     if key not in _TREE:
-        cls = type("D_" + _ident(name), (root_class(),), {"__oai_generated__": True, "__oai_discipline__": name})
+        cls = type("D_" + _ident(name), (root_class(),), {"__lean_literal__": True, "__oai_generated__": True, "__oai_discipline__": name})
         _TREE[key] = lean.category("", title=md_to_tex(name), label="disc:" + _ident(name))(cls)
     return _TREE[key]
 
@@ -221,7 +221,7 @@ def family(num: str, cat: Catalog | None = None) -> type:
     _LAST_KNOWN["families"] = set(cat.families)
     heading = (f"\\subsection{{\\texorpdfstring{{[{num}] {md_to_tex(f.title)}}}{{[{num}] {plain_title(f.title)}}}}}"
                f"\\label{{fam:{num}}}\n")
-    cls = type(f"F{num}", (discipline_class(f.discipline),), {"__oai_generated__": True, "__oai_family__": num})
+    cls = type(f"F{num}", (discipline_class(f.discipline),), {"__lean_literal__": True, "__oai_generated__": True, "__oai_family__": num})
     _TREE[key] = lean.category(heading + family_tex(f), title=f"[{num}] {md_to_tex(f.title)}", label=f"fam:{num}")(cls)
     for ch in f.challenges:
         for full in ch.theorem_names:
@@ -358,11 +358,11 @@ def build_guide(g: Guide, cat: Catalog | None = None, name: str = "Guide", label
             body.append(f"\\item \\textbf{{{ent}}} \\quad {md_to_tex(r.result_md)} --- {md_to_tex(r.notes_md)}")
         body.append("\\end{rows}")
         bases = tuple(family(n, cat) for n in nums) or (root_class(),)
-        cls = type(f"{name}_S{k}", bases, {"__oai_generated__": True})
+        cls = type(f"{name}_S{k}", bases, {"__lean_literal__": True, "__oai_generated__": True})
         secs.append(lean.category("\n".join(body), title=md_to_tex(s.title), label=f"{label}:{k}")(cls))
     allf = tuple(family(n, cat) for n in guide_families(g, cat))
     intro = f"\\section{{{md_to_tex(g.title)}}}\\label{{{label}}}\n" + blocks_to_tex(g.intro_md)
-    top = type(name, allf or (root_class(),), {"__oai_generated__": True, "__sections__": secs, "__guide__": g})
+    top = type(name, allf or (root_class(),), {"__lean_literal__": True, "__oai_generated__": True, "__sections__": secs, "__guide__": g})
     return lean.category(intro, title=md_to_tex(g.title), label=label)(top)
 
 
@@ -410,6 +410,7 @@ PREAMBLE = r"""\documentclass[10pt,a4paper]{article}
 \setlist[rows]{label={},leftmargin=0pt,itemsep=4pt}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
 \providecommand{\mathscr}[1]{\mathcal{#1}}
+"""+leandsl.TEX_PREAMBLE+"\n"+r"""
 \providecommand{\lt}{<}\providecommand{\gt}{>}
 \setlength{\parindent}{0pt}\setlength{\parskip}{4pt}
 \setlength{\emergencystretch}{3em}
@@ -431,6 +432,10 @@ not of one result depending on the other;
 \end{itemize}
 
 No connection is inferred from similar subject matter. A family with no Lean scope note has no Lean-based connections.
+
+Every section and every theorem has a label. A blue name is a link to the place where that thing is stated, followed by
+the page number (``p.~12'') when it is a whole section; a class that extends another (in the Python source,
+\texttt{class C(A, B)}) says so, links to what it extends and lists what it inherits.
 """
 
 
@@ -461,14 +466,18 @@ def render_document(top: type, cat: Catalog, outside=(), title="OpenAI math rele
     body.append("\\clearpage\\section{The families}\nBy discipline, with their connections and Lean statements.\n")
     order = [d for d in cat.disciplines if d in by_disc]
     for d in order:
-        body.append(f"\\subsection*{{\\large {md_to_tex(d)}}}")
+        body.append(f"\\dsllabel{{{leandsl.cat_label(discipline_class(d))}}}\\subsection*{{\\large {md_to_tex(d)}}}")
         for n in by_disc[d]:
             fc = family(n, cat)
             body.append(leandsl.category_tex(fc, item_level="subsubsection"))
-            for m in models:
-                if fc in m.__bases__:
-                    body.append(f"\\subsubsection*{{Worked model: {m.__dict__.get('__lean_title__') or m.__name__}}}\n"
-                                + leandsl.category_tex(m, item_level="paragraph"))
+
+            def add_models(parent, depth=0):
+                for m in models:
+                    if parent in m.__bases__:
+                        body.append(f"\\subsubsection*{{Worked model: {m.__dict__.get('__lean_title__') or m.__name__}}}\n"
+                                    + leandsl.category_tex(m, item_level="paragraph"))
+                        add_models(m, depth + 1)
+            add_models(fc)
     if outside:
         nb = collections.OrderedDict()
         for e, n in outside:
@@ -479,7 +488,7 @@ def render_document(top: type, cat: Catalog, outside=(), title="OpenAI math rele
             f = cat.families[n]
             how = "; ".join(sorted({f"{e.kind} [{e.src if e.dst == n else e.dst}]" + (f" ({e.weight} module{'s' if e.weight != 1 else ''})" if e.kind == 'shares' else "")
                                     for e in es}))
-            body.append(f"\\item \\textbf{{[{n}] {md_to_tex(f.title)}}} ({md_to_tex(f.discipline)}). {how}.\\\\\n"
+            body.append(f"\\item \\dsllabel{{fam:{n}}}\\textbf{{[{n}] {md_to_tex(f.title)}}} ({md_to_tex(f.discipline)}). {how}.\\\\\n"
                         f"{{\\small {md_to_tex(f.summary)}}}")
         body.append("\\end{rows}")
     if problems:
@@ -487,21 +496,30 @@ def render_document(top: type, cat: Catalog, outside=(), title="OpenAI math rele
                     "Where the guide page and the release's files disagree:\n\\begin{itemize}\n"
                     + "\n".join("\\item " + md_to_tex(p) for p in problems) + "\n\\end{itemize}")
     tail = [f"\\section{{{md_to_tex(h)}}}\n" + blocks_to_tex(b) for h, b in g.tail if h not in ("Related pages",)]
-    return fix_verbatim(PREAMBLE + f"\\title{{{md_to_tex(title)}}}\\author{{generated from the repository by \\texttt{{tools/oai\\_tree.py}}}}\n"
+    doc = (PREAMBLE + f"\\title{{{md_to_tex(title)}}}\\author{{generated from the repository by \\texttt{{tools/oai\\_tree.py}}}}\n"
             "\\date{}\n\\begin{document}\n\\maketitle\n\\tableofcontents\n" + LEGEND + "\n".join(body) + "\n"
             + "\n".join(tail) + "\n\\end{document}\n")
+    doc, _ = leandsl.close_refs(doc)                      # a link to something outside this document becomes plain text
+    return fix_verbatim(doc)
 
 
 def build_pdf(tex: pathlib.Path) -> bool:
     ok = True
-    for _ in range(2):
+    r = None
+    for _ in range(3):                                    # the third run settles the page numbers of the references
         r = subprocess.run(["xelatex", "-interaction=nonstopmode", "-halt-on-error", tex.name], cwd=tex.parent,
                            capture_output=True, text=True)
         ok = ok and r.returncode == 0
         if r.returncode:
             print("\n".join(l for l in r.stdout.splitlines() if l.startswith("!") or "Undefined" in l)[:1500])
-            break
-    return ok
+            return False
+    log = r.stdout.replace("\n", "")
+    undefined = sorted(set(re.findall(r"Reference `([^']*)' on page \d+ undefined", log)
+                           + re.findall(r"Hyper reference `([^']*)' on page \d+ undefined", log)))
+    multiple = sorted(set(re.findall(r"Label `([^']*)' multiply defined", log)))
+    print(f"references in the PDF: {len(undefined)} undefined, {len(multiple)} multiply defined"
+          + (f" ({', '.join((undefined + multiple)[:6])})" if undefined or multiple else ""))
+    return ok and not undefined and not multiple
 
 
 def main(argv=None):
@@ -512,6 +530,7 @@ def main(argv=None):
     ap.add_argument("--pdf", action="store_true")
     ap.add_argument("--no-edges", action="store_true", help="skip the Lean import analysis (about 30 s)")
     ap.add_argument("--with-models", action="store_true", help="also load tools/dsl_models/*.py that extend a family")
+    ap.add_argument("--graph", help="also write the tree (categories, items, links) as JSON to this file")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
     if a.selftest:
@@ -547,6 +566,15 @@ def main(argv=None):
     tf = out / (path.stem.lower() + ".tex")
     tf.write_text(tex)
     print(f"wrote {tf}")
+    ck = leandsl.check_labels(tex)
+    print(f"labels: {ck['defined']} defined, {len(ck['dangling'])} dangling, {len(ck['duplicate'])} duplicate"
+          + (f" ({', '.join(ck['dangling'] + ck['duplicate'])[:200]})" if ck["dangling"] or ck["duplicate"] else ""))
+    if a.graph:
+        import json
+        gr = leandsl.graph()
+        pathlib.Path(a.graph).write_text(json.dumps(gr, indent=1, ensure_ascii=False))
+        kinds = collections.Counter(e["kind"] for e in gr["edges"])
+        print(f"wrote {a.graph}: {len(gr['nodes'])} nodes, {len(gr['edges'])} edges ({', '.join(f'{k} {v}' for k, v in sorted(kinds.items()))})")
     for p in g.problems:
         print("  guide vs catalogue:", p)
     if a.pdf:
@@ -616,6 +644,10 @@ def selftest():
             doc = render_document(top, c, problems=g.problems)
             ok("\\section{Guide}" in doc and "\\label{fam:001}" in doc and "Sum $x$." in doc and "\\hyperref[fam:001]{[001]}" in doc
                and "Checks of the guide" in doc and "\\section{Caveats}" in doc and doc.count("\\begin{document}") == 1, doc)
+            ck = leandsl.check_labels(doc)                  # every link in the document leads to a label in it
+            ok(ck["dangling"] == [] and ck["duplicate"] == [] and "\\dsllabel{disc:Algebra}" in doc and "\\dsllabel{fam:001}" not in doc, ck)
+            ok("\\usepackage[colorlinks" in doc and "\\providecommand{\\dsllabel}" in doc and doc.index("\\providecommand{\\dsllabel}") > doc.index("{hyperref}"))
+            ok("Extends" not in doc and "Inherited from" not in doc)       # generated classes print no inheritance notes
             (r / "lean" / "docs" / "001.md").write_text("# T\n\n## Scope\n\nS.\n\n| a | [A](../ComparatorChallenges/AA.lean) |\n")
             (r / "lean" / "ComparatorChallenges").mkdir(parents=True)
             (r / "lean" / "OAI" / "X").mkdir(parents=True)
@@ -628,6 +660,8 @@ def selftest():
             _TREE.clear()
             f1 = family("001", c)
             ok(list(f1.results)[0].name == "OAI.AA.t" and list(f1.results)[0].source == "OAI.X.Main1")
+            res_t = list(f1.results)[0]
+            ok(res_t.latex_label() == "fam:001:res:OAI.AA.t" and f1.latex_ref().startswith("\\hyperref[fam:001]"), res_t.latex_label())
             M = lean.category("m")(type("M1", (f1,), {}))
             @M.lemmas(source="OAI.N.lem")
             def lem(x: leandsl.Real, y: leandsl.Real):
@@ -645,6 +679,9 @@ def selftest():
             def ghost(x: leandsl.Real, y: leandsl.Real):
                 return x <= y + 3
             main_.connect(lem)
+            tm = leandsl.category_tex(M)
+            ok("Extends \\hyperref[fam:001]{" in tm and "Inherited from \\hyperref[fam:001]" in tm
+               and "\\hyperref[fam:001:res:OAI.AA.t]" in tm and "\\dsllabel{cat:M1}" in tm, tm)
             ok(check_model(c, M) == [f"M1.ghost: source OAI.N.ghost is not declared in the Lean files behind family 001"], check_model(c, M))
             unrel.connect(lem)                                               # a claim the Lean text does not bear out
             probs = check_model(c, M)
