@@ -15,7 +15,7 @@ STAMP_FILES := $(addprefix $(STAMPS)/,$(addsuffix .stamp,$(SCRIPTS)))
 COMMON      := tools/common.py
 
 .DEFAULT_GOAL := all
-.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta sympy sympy-pdf hopf su2 clean
+.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta sympy sympy-pdf hopf su2 sym2lean sym2lean-pdf sym2lean-test dsl pyast clean
 
 all: pdf
 
@@ -33,8 +33,13 @@ help:
 	@echo "make figures     regenerate the committed figures/*.png used by SPECTRE_CLOCK_AND_CHAIR44.md (about 90 s)"
 	@echo "make combinatorics  exact checks and figures for COMBINATORICS_REPRESENTATIONS.md (about 1 min; needs networkx)"
 	@echo "make zeta           zero-counting check and strip figures for ZETA_ZEROS.md (about 30 s; needs mpmath)"
+	@echo "make sym2lean       sympy -> LaTeX -> Lean 4: write $(BUILD)/lean/*.lean from the sympy models (SYM2LEAN_ARGS='bloch_law --check --prove')"
+	@echo "make sym2lean-pdf   also typeset the report $(BUILD)/sym2lean_document.pdf"
+	@echo "make sym2lean-test  selftests of the three sym2lean modules (no models run)"
+	@echo "make dsl         @lean decorator DSL: tools/dsl_models/*.py -> $(BUILD)/lean/Dsl_mathlib.lean"
+	@echo "make pyast       Python (ast) -> LaTeX + Lean with loop-invariant VCs: tools/py_models/*.py -> $(BUILD)/lean/PyAst_mathlib.lean"
 	@echo "make clean      remove $(BUILD)/"
-	@echo "Variables: PY=python3  FULL=1"
+	@echo "Variables: PY=python3  FULL=1  SYM2LEAN_ARGS="
 
 setup:
 	$(PY) -m pip install -r tools/requirements.txt
@@ -72,6 +77,37 @@ sympy:
 
 sympy-pdf:
 	$(PY) sympy_models/export.py --pdf
+
+# sympy -> LaTeX -> Lean 4 (tools/sym2lean.py): every equation is printed, read back, compared with its sympy
+# expression, and only then written as a Lean theorem. `--check` gives the files to Lean if there is one.
+SYM2LEAN_ARGS ?=
+sym2lean:
+	$(PY) tools/sym2lean.py $(SYM2LEAN_ARGS)
+
+sym2lean-pdf: sym2lean
+	@command -v pdflatex >/dev/null || { echo "pdflatex not found (install TeX Live)"; exit 1; }
+	cp tools/templates/sym2lean_document.tex $(BUILD)/
+	cd $(BUILD) && pdflatex -interaction=nonstopmode -halt-on-error sym2lean_document.tex > sym2lean.log 2>&1 \
+	  || { tail -40 sym2lean.log; exit 1; }
+	cd $(BUILD) && pdflatex -interaction=nonstopmode -halt-on-error sym2lean_document.tex >> sym2lean.log 2>&1 \
+	  || { tail -40 sym2lean.log; exit 1; }
+	@echo "built $(BUILD)/sym2lean_document.pdf"
+
+sym2lean-test:
+	$(PY) tools/texmath.py --selftest
+	$(PY) tools/lean_emit.py --selftest
+	$(PY) tools/sym2lean.py --selftest
+	$(PY) tools/leandsl.py --selftest
+	$(PY) tools/pyast2lean.py --selftest
+
+# @lean DSL (tools/leandsl.py): models in tools/dsl_models/*.py -> build/lean/Dsl_mathlib.lean
+dsl:
+	$(PY) tools/leandsl.py
+
+# Python source -> LaTeX + Lean via ast, loop invariants from asserts (tools/pyast2lean.py); PYAST_ARGS=--prove
+PYAST_ARGS ?=
+pyast:
+	$(PY) tools/pyast2lean.py $(PYAST_ARGS)
 
 # Run only the checks of the Hopf models (no export; a partial export currently stops in concise.py). See HOPF_GAUGE.md.
 hopf:
