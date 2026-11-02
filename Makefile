@@ -15,7 +15,7 @@ STAMP_FILES := $(addprefix $(STAMPS)/,$(addsuffix .stamp,$(SCRIPTS)))
 COMMON      := tools/common.py
 
 .DEFAULT_GOAL := all
-.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta sympy sympy-pdf hopf su2 sym2lean sym2lean-pdf sym2lean-test dsl pyast clean
+.PHONY: all help setup models pdf full bloch on kt haldane chair44 figures combinatorics zeta sympy sympy-pdf hopf su2 sym2lean sym2lean-pdf sym2lean-test dsl pyast physics-lean clean
 
 all: pdf
 
@@ -38,6 +38,7 @@ help:
 	@echo "make sym2lean-test  selftests of the three sym2lean modules (no models run)"
 	@echo "make dsl         @lean decorator DSL: tools/dsl_models/*.py -> $(BUILD)/lean/Dsl_mathlib.lean"
 	@echo "make pyast       Python (ast) -> LaTeX + Lean with loop-invariant VCs: tools/py_models/*.py -> $(BUILD)/lean/PyAst_mathlib.lean"
+	@echo "make physics-lean  PHYSICS.md families, their papers and Lean arithmetic statements, one xelatex document: $(BUILD)/oai/physics.pdf (several minutes; GUIDE=PHYSICS.md)"
 	@echo "make clean      remove $(BUILD)/"
 	@echo "Variables: PY=python3  FULL=1  SYM2LEAN_ARGS="
 
@@ -108,6 +109,14 @@ dsl:
 PYAST_ARGS ?=
 pyast:
 	$(PY) tools/pyast2lean.py $(PYAST_ARGS)
+
+# One document for a guide page: its families, the Lean arithmetic statements read from their files, the chains between them
+# (tools/oai_tree.py --lean-items, tools/oai_lean.py). Needs xelatex; the first run reads every family's Lean imports (about 30 s).
+GUIDE ?= PHYSICS.md
+OAI_ARGS ?=
+physics-lean:
+	@command -v xelatex >/dev/null || { echo "xelatex not found (install TeX Live)"; exit 1; }
+	$(PY) tools/oai_tree.py --guide $(GUIDE) --out $(BUILD)/oai --pdf --with-models --lean-items --graph $(BUILD)/oai/graph.json $(OAI_ARGS)
 
 # Run only the checks of the Hopf models (no export; a partial export currently stops in concise.py). See HOPF_GAUGE.md.
 hopf:
