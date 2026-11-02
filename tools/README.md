@@ -178,3 +178,6 @@ On the physics slice, 1,131 statements were read from 89,654 theorems and lemmas
 belongs to one family, so none of those links joins two families, and the longest chain is 3 statements. The cross-family
 figure therefore shows one chain per family plus the catalogue's category-level `shares`/`cites` arrows, and says so.
 Statements longer than 70 characters are left out of the figure (`max_chars`) so it stays legible.
+
+Build the document with `make physics-lean` (writes `build/oai/physics.pdf` and `build/oai/graph.json`; about 1.5 minutes;
+`GUIDE=OTHER.md` for another guide page, `OAI_ARGS=--no-sample` to skip the sampling).
