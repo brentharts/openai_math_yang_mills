@@ -30,6 +30,8 @@ from dataclasses import dataclass, field
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import leandsl
+import oai_lean
+import dsl_display
 from leandsl import lean, CATEGORIES
 from oai_catalog import Catalog, ROOT
 
@@ -238,6 +240,163 @@ def family(num: str, cat: Catalog | None = None) -> type:
     return _TREE[key]
 
 
+def module_class(module: str, nums, cat: Catalog | None = None) -> type:
+    """The category of one Lean module: a subclass of every family (of ``nums``) whose closure holds it, flat and ascending."""
+    key = ("m", module)
+    if key not in _TREE:
+        cat = cat or catalog()
+        bases = tuple(family(n, cat) for n in sorted(nums)) or (root_class(),)
+        cls = type("M_" + re.sub(r"\W", "_", module), bases,
+                   {"__lean_literal__": True, "__oai_generated__": True, "__oai_module__": module})
+        _TREE[key] = lean.category("", title=f"\\texttt{{{leandsl._brk(module)}}}", label="mod:" + module)(cls)
+    return _TREE[key]
+
+
+def paper_class(d: str, cat: Catalog | None = None) -> type:
+    """The category of one manuscript (a paper): a subclass of its family, carrying its title and abstract."""
+    key = ("p", d)
+    if key not in _TREE:
+        cat = cat or catalog()
+        m = cat.manuscripts.get(d)
+        base = family(m.family, cat) if m and m.family in cat.families else root_class()
+        cls = type("P_" + re.sub(r"\W", "_", d), (base,), {"__lean_literal__": True, "__oai_generated__": True, "__oai_paper__": d})
+        title = md_to_tex(m.title) if m else leandsl._esc(d)
+        doc = (f"\\paragraph*{{{title}}}\n" + md_to_tex(m.abstract) + "\n") if m else ""
+        _TREE[key] = lean.category(doc, title=title, label="paper:" + d)(cls)
+    return _TREE[key]
+
+
+def connect_papers(dirs=None, cat: Catalog | None = None) -> int:
+    """Each ``OAI:<directory>`` key of a manuscript's bibliography is a ``cites`` connection between the two papers'
+    categories (restricted to ``dirs`` when given). Returns the number of connections."""
+    cat = cat or catalog()
+    keep = None if dirs is None else set(dirs)
+    n = 0
+    for a, bs in sorted(cat.paper_cites().items()):
+        for b in sorted(bs):
+            if keep is None or (a in keep and b in keep):
+                paper_class(a, cat).connect(paper_class(b, cat), kind="cites", note="its bibliography cites the other")
+                n += 1
+    return n
+
+
+def release_graph(cat: Catalog | None = None, edges: bool = True) -> dict:
+    """The whole release as one tree of categories: every family and every paper, with the connections between families
+    (``edges=True`` reads the Lean imports of all of them) and between papers; returned as ``leandsl.graph()`` data."""
+    cat = cat or catalog()
+    for n in cat.families:
+        family(n, cat)
+    for d in cat.manuscripts:
+        paper_class(d, cat)
+    connect_papers(None, cat)
+    if edges:
+        connect_families(list(cat.families), cat)
+    return leandsl.graph()
+
+
+@dataclass
+class LeanItems:
+    items: dict                  # qualified Lean name -> the Item read from it
+    by_family: dict              # family number -> its items
+    stats: dict                  # family number -> Counter of statuses over the theorems/lemmas of its modules
+    reasons: collections.Counter  # why statements were not read
+    links: int                   # `uses` links made from names
+    total: int                   # theorems/lemmas with a plain statement, over the modules read
+    duplicates: int = 0          # a qualified name declared in two modules: the first one is the one linked
+
+
+def lean_items(nums, cat: Catalog | None = None, sample: bool = True) -> LeanItems:
+    """Read the arithmetic theorems of every Lean module behind the families ``nums`` (see oai_lean) into module
+    categories, each a subclass of the families whose closure holds the module, and link them by name."""
+    cat = cat or catalog()
+    nums = sorted(set(nums))
+    owners = collections.defaultdict(set)
+    for n in nums:
+        for m in cat.family_closure(n):
+            owners[m].add(n)
+    root = cat.root / "lean"
+    bodies, index = {}, collections.defaultdict(list)
+    stats = {n: collections.Counter() for n in nums}
+    reasons, by_mod, total = collections.Counter(), {}, 0
+    for m in sorted(owners):
+        p = root / (m.replace(".", "/") + ".lean")
+        if not p.exists():
+            continue
+        rs = []
+        for d in oai_lean.declarations(p.read_text(errors="replace"), m):
+            index[d.qualified.split(".")[-1]].append(d.qualified)
+            bodies.setdefault(d.qualified, d.body)
+            r = oai_lean.read_declaration(d, sample)
+            total += 1
+            for n in owners[m]:
+                stats[n][r.status] += 1
+            if r.status == "unsupported":
+                reasons[r.detail.split(":")[0][:70]] += 1
+            rs.append(r)
+        if any(r.stmt is not None for r in rs):
+            by_mod[m] = rs
+    items, dup = {}, 0
+    for m, rs in by_mod.items():
+        for q, it in oai_lean.ingest(module_class(m, owners[m], cat), rs).items():
+            if q in items:
+                dup += 1
+            else:
+                items[q] = it
+    links = oai_lean.link_uses(items, bodies, index)
+    by_family = {n: [it for it in items.values() if n in owners[it.category.__oai_module__]] for n in nums}
+    return LeanItems(items, by_family, stats, reasons, links, total, dup)
+
+
+def longest_use_path(items) -> list:
+    """The longest chain of ``uses`` links among ``items`` (a cycle is never followed twice)."""
+    pool = {id(i) for i in items}
+    memo, stack = {}, set()
+
+    def best(it):
+        if id(it) in memo:
+            return memo[id(it)]
+        stack.add(id(it))
+        tail = []
+        for l in it.links:
+            if l.kind == "uses" and id(l.dst) in pool and id(l.dst) not in stack:
+                p = best(l.dst)
+                if len(p) > len(tail):
+                    tail = p
+        stack.discard(id(it))
+        memo[id(it)] = [it] + tail
+        return memo[id(it)]
+    out = []
+    for it in items:
+        p = best(it)
+        if len(p) > len(out):
+            out = p
+    return out
+
+
+def lean_figure(li: LeanItems, cat: Catalog | None = None, rows: int = 8, min_len: int = 2, max_len: int = 4,
+                max_chars: int = 70):
+    """One display over several families: for each of the ``rows`` families with the longest chain of ``uses`` links among
+    its arithmetic lemmas, that chain as a path row; then the connections recorded between those families."""
+    cat = cat or catalog()
+    short = lambda its: [it for it in its if len(leandsl.tex(it.concl)) <= max_chars]      # a long statement makes the figure unreadable
+    paths = {n: longest_use_path(short(its))[:max_len] for n, its in li.by_family.items()}
+    chosen = sorted((n for n, p in paths.items() if len(p) >= min_len), key=lambda n: (-len(paths[n]), n))[:rows]
+    if not chosen:
+        return None, []
+    d = dsl_display.Display("lean-paths", None, (
+        "Arithmetic lemmas read from the Lean files, one chain per family: each statement is followed by one that its proof "
+        "in the Lean file mentions by name. The arrows between families are the connections of the catalogue."))
+    for n in sorted(chosen):
+        f = family(n, cat)
+        d.path_row(paths[n], head=f"[{n}]")
+    fams = [family(n, cat) for n in sorted(chosen)]
+    for a in fams:
+        for b in fams:
+            if a is not b and any(l.dst is b and l.kind != "inherits" for l in a.__dict__.get("__links__", [])):
+                d.category_link_row(a, b)
+    return d, [it for n in sorted(chosen) for it in paths[n]]
+
+
 def connect_families(nums, cat: Catalog | None = None, kinds=("cites", "shares", "mentions")) -> list:
     """Record the catalogue's edges between the given families as category connections; the edges that lead
     outside ``nums`` are returned as (edge, outside family number) so a document can list the neighbours."""
@@ -398,7 +557,7 @@ def check_model(cat: Catalog, cls: type) -> list:
 PREAMBLE = r"""\documentclass[10pt,a4paper]{article}
 \usepackage[a4paper,margin=22mm]{geometry}
 \usepackage{fontspec}
-\usepackage{amsmath}
+\usepackage{amsmath,graphicx}
 \usepackage{unicode-math}
 \setmonofont{FreeMono}[Scale=0.95,BoldFont=FreeMonoBold]
 \usepackage{xcolor}
@@ -453,7 +612,50 @@ def fix_verbatim(tex: str) -> str:
     return re.sub(r"\\begin\{verbatim\}(.*?)\\end\{verbatim\}", one, tex, flags=re.S)
 
 
-def render_document(top: type, cat: Catalog, outside=(), title="OpenAI math release: a slice", models=(), problems=()) -> str:
+def _family_sets(it) -> set:
+    return {c.__oai_family__ for c in it.category.__mro__ if c.__dict__.get("__oai_family__")}
+
+
+def lean_section(li: LeanItems, cat: Catalog) -> str:
+    """The document section for the arithmetic read from the Lean files: counts, one figure over several families, the
+    statements in it, and the limits."""
+    read = sum(len(v) for v in li.by_family.values())
+    fams = [n for n, v in li.by_family.items() if v]
+    cross = sum(1 for it in li.items.values() for l in it.links
+                if l.kind == "uses" and not (_family_sets(it) & _family_sets(l.dst)))
+    out = ["\\clearpage\\section{Arithmetic read from the Lean files}\n",
+           f"The Lean files behind these families declare {li.total:,} theorems and lemmas with a plain statement. "
+           f"{len(li.items):,} of them are pure real arithmetic (numbers of type $\\mathbb R$, $\\mathbb N$, $\\mathbb Z$ or "
+           "$\\mathbb Q$, the order relations, \\texttt{Real.sqrt}, \\texttt{Real.log}, \\texttt{Real.exp}, absolute values, "
+           "\\texttt{min}, \\texttt{max}, \\texttt{Nat.choose}, \\texttt{Nat.factorial}) and were read into sympy by "
+           "\\texttt{tools/oai\\_lean.py}; each reading was printed back and read again, and sympy found each statement "
+           f"true at sampled points that satisfy its hypotheses (evidence only; the proofs are the release's). "
+           f"{li.links:,} \\emph{{uses}} connections between them come from names: the proof of one mentions the name of "
+           f"another. {cross} of those {li.links:,} join items of different families.\n",
+           "\\begin{rows}"]
+    for n in fams:
+        st = li.stats[n]
+        out.append(f"\\item \\hyperref[fam:{n}]{{[{n}] {md_to_tex(cat.families[n].title)}}}: {len(li.by_family[n])} read "
+                   f"({st['sampled']} sampled, {st['unchecked']} not sampled), {st['unsupported']:,} not read.")
+    out.append("\\end{rows}")
+    fig, shown = lean_figure(li, cat)
+    if fig is not None:
+        out.append(f"\n{fig.latex_ref()} shows the longest chain among these lemmas in each of several families, and the "
+                   "connections the catalogue records between those families.\n")
+        out.append(fig.figure())
+        out.append("\\subsection*{The statements in the figure}\n")
+        out += [leandsl._item_tex(it, v2=True, level="paragraph") for it in shown]
+    why = ", ".join(f"{k} ({v:,})" for k, v in li.reasons.most_common(6))
+    out.append("\\subsection*{What is not claimed}\n"
+               f"Most statements are not read, mainly: {why}. A statement that uses natural-number subtraction or division "
+               "is not read because Lean truncates them. Where sympy would divide by zero or leave the reals the point is skipped "
+               "(Lean's total functions are not modelled). A \\emph{uses} connection is a name in a proof, not a checked "
+               "dependence. The statements shown are the Lean text read by a small parser; the Lean text is printed beside each.\n")
+    return "\n".join(out)
+
+
+def render_document(top: type, cat: Catalog, outside=(), title="OpenAI math release: a slice", models=(), problems=(),
+                    lean: LeanItems | None = None) -> str:
     """The LaTeX document for a guide class: legend, the guide, its families by discipline, the neighbours."""
     g: Guide = top.__guide__
     famcls = [c for c in top.__mro__ if c.__dict__.get("__oai_family__")]
@@ -464,6 +666,7 @@ def render_document(top: type, cat: Catalog, outside=(), title="OpenAI math rele
     for s in top.__sections__:
         body.append(leandsl.category_tex(s))
     body.append("\\clearpage\\section{The families}\nBy discipline, with their connections and Lean statements.\n")
+    attached = set()
     order = [d for d in cat.disciplines if d in by_disc]
     for d in order:
         body.append(f"\\dsllabel{{{leandsl.cat_label(discipline_class(d))}}}\\subsection*{{\\large {md_to_tex(d)}}}")
@@ -474,10 +677,19 @@ def render_document(top: type, cat: Catalog, outside=(), title="OpenAI math rele
             def add_models(parent, depth=0):
                 for m in models:
                     if parent in m.__bases__:
+                        attached.add(m)
                         body.append(f"\\subsubsection*{{Worked model: {m.__dict__.get('__lean_title__') or m.__name__}}}\n"
                                     + leandsl.category_tex(m, item_level="paragraph"))
                         add_models(m, depth + 1)
             add_models(fc)
+    if lean is not None and lean.items:
+        body.append(lean_section(lean, cat))
+    loose = [m for m in models if m not in attached]
+    if loose:
+        body.append("\\clearpage\\section{Models not attached to a family}\nCategories written in the DSL that extend no family "
+                    "of the release, so there is nothing in the Lean files to check them against.\n")
+        for m in loose:
+            body.append(leandsl.category_tex(m, item_level="subsection"))
     if outside:
         nb = collections.OrderedDict()
         for e, n in outside:
@@ -531,10 +743,23 @@ def main(argv=None):
     ap.add_argument("--no-edges", action="store_true", help="skip the Lean import analysis (about 30 s)")
     ap.add_argument("--with-models", action="store_true", help="also load tools/dsl_models/*.py that extend a family")
     ap.add_argument("--graph", help="also write the tree (categories, items, links) as JSON to this file")
+    ap.add_argument("--lean-items", action="store_true",
+                    help="read the arithmetic theorems behind the guide's families from the Lean files (about 1 minute)")
+    ap.add_argument("--no-sample", action="store_true", help="with --lean-items: do not sample the readings")
+    ap.add_argument("--release-graph", help="no document: write the whole release (every family and paper) as JSON and stop")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
     if a.selftest:
         return selftest()
+    if a.release_graph:
+        import json
+        gr = release_graph(catalog(), edges=not a.no_edges)
+        pathlib.Path(a.release_graph).write_text(json.dumps(gr, ensure_ascii=False))
+        kinds = collections.Counter(e["kind"] for e in gr["edges"])
+        types = collections.Counter(n["type"] for n in gr["nodes"])
+        print(f"wrote {a.release_graph}: {len(gr['nodes'])} nodes ({', '.join(f'{k} {v}' for k, v in sorted(types.items()))}), "
+              f"{len(gr['edges'])} edges ({', '.join(f'{k} {v}' for k, v in sorted(kinds.items()))})")
+        return
     if not a.guide:
         ap.error("--guide is required")
     cat = catalog()
@@ -549,6 +774,11 @@ def main(argv=None):
     if not a.no_edges:
         print("reading the Lean imports of every family (about 30 s) ...")
         outside = connect_families(guide_families(g, cat), cat)
+    li = None
+    if a.lean_items:
+        print("reading the arithmetic theorems of the Lean files ...")
+        li = lean_items(guide_families(g, cat), cat, sample=not a.no_sample)
+        print(f"{len(li.items)} items read from {li.total} theorems/lemmas; {li.links} 'uses' connections")
     models = []
     if a.with_models:
         import runpy
@@ -557,10 +787,13 @@ def main(argv=None):
             runpy.run_path(str(f), run_name="dsl_model")
         models = [c for c in CATEGORIES if c not in before and not c.__dict__.get("__oai_generated__")]
         for m in models:
+            if not any(c.__dict__.get("__oai_family__") for c in m.__mro__):
+                print(f"model {m.__name__}: extends no family; nothing to check against the Lean files")
+                continue
             probs = check_model(cat, m)
             g.problems += probs
             print(f"model {m.__name__}: " + ("every source and 'uses' claim found in the Lean text" if not probs else f"{len(probs)} problem(s)"))
-    tex = render_document(top, cat, outside, title=g.title, models=models, problems=g.problems)
+    tex = render_document(top, cat, outside, title=g.title, models=models, problems=g.problems, lean=li)
     out = pathlib.Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     tf = out / (path.stem.lower() + ".tex")
@@ -615,6 +848,8 @@ def selftest():
         r = pathlib.Path(d)
         for p in ("preprints/A-One-1-2026", "preprints/B-Two-2-2026"):
             (r / p).mkdir(parents=True)
+        (r / "preprints" / "B-Two-2-2026" / "build").mkdir()
+        (r / "preprints" / "B-Two-2-2026" / "build" / "b.tex").write_text("We use \\cite{OAI:A-One-1-2026} and \\cite{Other:2020}.\n")
         (r / "lean" / "docs").mkdir(parents=True)
         (r / "overview.tex").write_text("\\cataloguesection{Algebra}{2}\n\\resultentry{001}{One}{d}{l}\n\\resultentry{002}{Two}{d}{l}\n")
         (r / "CONTENTS.md").write_text("**001. First.** Sum $`x`$.\n\n&emsp;[Paper A](preprints/A-One-1-2026/p.pdf)\n\nAbs A.\n\n"
@@ -626,6 +861,14 @@ def selftest():
             f1, f2 = family("1", c), family("002", c)
             ok(f1 is family("001", c) and f1.__name__ == "F001" and issubclass(f1, discipline_class("Algebra")) and issubclass(f1, root_class()))
             ok(f1 is not f2 and f1.__oai_family__ == "001")
+            pa, pb = paper_class("A-One-1-2026", c), paper_class("B-Two-2-2026", c)
+            ok(issubclass(pa, f1) and issubclass(pb, f2) and pa.latex_label() == "paper:A-One-1-2026" and pa is paper_class("A-One-1-2026", c))
+            ok(connect_papers(None, c) == 1 and [(l.kind, l.dst) for l in pb.__links__ if l.kind != "inherits"] == [("cites", pa)])
+            ok(issubclass(paper_class("stray-dir", c), root_class()) and connect_papers(["A-One-1-2026"], c) == 0)
+            gr0 = release_graph(c, edges=False)
+            ids = {x["id"] for x in gr0["nodes"]}
+            ok({"fam:001", "fam:002", "paper:A-One-1-2026", "paper:B-Two-2-2026", "disc:Algebra", "oai:root"} <= ids
+               and {"kind": "cites", "src": "paper:B-Two-2-2026", "dst": "paper:A-One-1-2026", "note": "its bibliography cites the other"} in gr0["edges"], ids)
             try:
                 family("999", c)
                 ok(False)
@@ -679,6 +922,19 @@ def selftest():
             def ghost(x: leandsl.Real, y: leandsl.Real):
                 return x <= y + 3
             main_.connect(lem)
+            li = lean_items(["001"], c, sample=True)
+            ok(sorted(li.items) == ["OAI.N.lem", "OAI.N.main"] and li.links == 1 and li.total == 3 and li.duplicates == 0, (sorted(li.items), li.links, li.total))
+            ok(li.stats["001"]["unsupported"] == 1 and li.reasons.most_common(1)[0][0].startswith("no numeric variable"), (li.stats, li.reasons))
+            ok(li.items["OAI.N.main"].uses == [li.items["OAI.N.lem"]] and issubclass(li.items["OAI.N.lem"].category, f1)
+               and li.items["OAI.N.lem"].category.__oai_module__ == "OAI.X.Main1", li.items["OAI.N.main"].uses)
+            ok("sampled points" in li.items["OAI.N.lem"].evidence and "\\begin{verbatim}\nlemma lem" in leandsl._item_tex(li.items["OAI.N.lem"], v2=True))
+            ok([i.name for i in longest_use_path(li.by_family["001"])] == ["OAI.N.main", "OAI.N.lem"])
+            lf, shown = lean_figure(li, c, rows=3)
+            lt = lf.tex()
+            ok(lf is not None and lt.count("\\underbrace") == 2 and "[001]" in lt and [i.name for i in shown] == ["OAI.N.main", "OAI.N.lem"], lt)
+            sec = lean_section(li, c)
+            ok("Arithmetic read from the Lean files" in sec and "0 of those 1" in sec and "\\hyperref[fam:001]" in sec and "Figure~" in sec, sec[:500])
+            ok(lean_figure(lean_items(["002"], c, sample=False), c)[0] is None)
             tm = leandsl.category_tex(M)
             ok("Extends \\hyperref[fam:001]{" in tm and "Inherited from \\hyperref[fam:001]" in tm
                and "\\hyperref[fam:001:res:OAI.AA.t]" in tm and "\\dsllabel{cat:M1}" in tm, tm)

@@ -92,7 +92,7 @@ GREEK = {"alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ", "epsilon": "
 
 def lean_ident(name: str) -> str:
     n = GREEK.get(name, name)
-    n = re.sub(r"[^A-Za-z0-9_'αβγδεθμσφρω]", "_", n)
+    n = re.sub(r"[^A-Za-z0-9_'₀-₉ℓα-κμ-ωΑ-ΟΡΤ-Ω]", "_", n)      # Lean keeps unicode letters, subscripts and primes (not λ, Π, Σ)
     return n if n and not n[0].isdigit() else "x_" + n
 
 
@@ -105,7 +105,7 @@ def is_natexpr(e) -> bool:
     if isinstance(e, (sp.Add, sp.Mul)):
         return all(is_natexpr(a) for a in e.args)
     if isinstance(e, sp.Pow):
-        return is_natexpr(e.base) and isinstance(e.exp, sp.Integer) or (is_natexpr(e.base) and is_natexpr(e.exp))
+        return is_natexpr(e.base) and ((isinstance(e.exp, sp.Integer) and e.exp >= 0) or is_natexpr(e.exp))   # not n**-1: ℕ has no inverse
     if isinstance(e, (sp.binomial, sp.factorial)):
         return all(is_natexpr(a) for a in e.args)
     return False
@@ -203,6 +203,13 @@ def _real(e) -> str:
             return f"Real.{nm} {_atomR(e.args[0])}"
     if isinstance(e, sp.Abs):
         return f"|{_real(e.args[0])}|"
+    if isinstance(e, (sp.Min, sp.Max)):
+        nm = "min" if isinstance(e, sp.Min) else "max"
+        args = [_atomR(a) for a in e.args]
+        out = args[-1]
+        for a in reversed(args[:-1]):
+            out = f"{nm} {a} " + (out if out.startswith("(") or out.replace("_", "").isalnum() else f"({out})")
+        return out
     if isinstance(e, sp.binomial):
         return f"(({_nat(e)} : ℕ) : ℝ)"
     if isinstance(e, sp.factorial):
@@ -375,11 +382,12 @@ class Step:
     expr: object
     why: str = ""
     using: object = None
+    tag: str = ""                # a few plain words naming the step under a long display (default: the item used)
 
 
 def _step(rel):
-    def make(expr, why: str = "", using=None) -> Step:
-        return Step(rel, sp.sympify(expr), why, using)
+    def make(expr, why: str = "", using=None, tag: str = "") -> Step:
+        return Step(rel, sp.sympify(expr), why, using, tag)
     make.__name__ = {"<=": "le", "<": "lt", "=": "eq", ">=": "ge", ">": "gt"}[rel]
     return make
 
@@ -686,6 +694,7 @@ class Item:
     refs: tuple = ()              # Ref(...): DOI, Wikipedia, arXiv, url
     reads: dict = field(default_factory=dict)  # letter -> the quantity it denotes (V2 ``reads=``)
     chains: list = field(default_factory=list)  # Chain(...): checked chains of inequalities
+    evidence: str = ""            # how a statement read from elsewhere was checked (e.g. sampled), printed under it
 
     @property
     def uses(self) -> list:
@@ -891,6 +900,21 @@ class _Registry:
             return it
         return deco(fn) if fn else deco
 
+    def ingest(self, name: str, params, hyps, concl, *, lean: str = "", source: str = "", doc: str = "",
+               reads=None, refs=(), evidence: str = "") -> "Item":
+        """An item given as data, not as a decorated function: ``params`` are ``(typed symbol, type)`` pairs, ``hyps`` and
+        ``concl`` relations. For code that reads statements from elsewhere (the Lean files); it is not available for results."""
+        if self._kind == "result":
+            raise TypeError("Cat.results.declare(...) declares a result")
+        if name in self._items:
+            raise ValueError(f"{self._owner.__name__}.{self._kind}s already has '{name}'")
+        it = Item(self._kind, name, list(params), list(hyps), concl, doc=doc, source=source, category=self._owner,
+                  lean_stmt=lean or None, refs=_refs(refs), reads=dict(reads or {}), evidence=evidence)
+        self._items[name] = it
+        REGISTRY.append(it)
+        _expose(self._owner, name, it)
+        return it
+
     def _find(self, name):
         for klass in self._owner.__mro__:
             reg = klass.__dict__.get(self._kind + "s")
@@ -920,7 +944,7 @@ class _Registry:
                 for n in klass.__dict__[self._kind + "s"]._items]
 
 
-_RESERVED = {"lemmas", "theorems", "results", "items", "connect", "linked_from", "toLatex", "latex_ref", "latex_label"}
+_RESERVED = {"lemmas", "theorems", "results", "items", "connect", "linked_from", "toLatex", "latex_ref", "latex_label", "display"}
 
 
 def _expose(owner: type, name: str, it) -> None:
@@ -932,6 +956,12 @@ def _expose(owner: type, name: str, it) -> None:
     cur = getattr(owner, name, None)
     if cur is None or isinstance(cur, Item):
         setattr(owner, name, it)
+
+
+def _category_display(cls, label: str, caption: str = ""):
+    """``Cat.display("energy", caption=...)``: a long display (dsl_display.Display) printed with this category."""
+    from dsl_display import Display
+    return Display(label, cls, caption)
 
 
 def _category_connect(cls, *others, kind: str = "uses", note: str = ""):
@@ -964,6 +994,7 @@ def _install_category(cls: type, doc: str | None = None, refs=(), title: str = "
                 cls.__links__.append(Link("inherits", cls, b))
         cls.latex_ref = classmethod(lambda c, text=None, page=False: _cat_ref(c, text, page))
         cls.latex_label = classmethod(lambda c: cat_label(c))
+        cls.display = classmethod(_category_display)
         cls.__init_subclass__ = classmethod(lambda sub, **kw: _install_category(sub))
         cls.items = classmethod(lambda c: list(c.lemmas) + list(c.theorems) + list(c.results))
         cls.connect = classmethod(_category_connect)
@@ -1239,6 +1270,10 @@ def _item_tex(it, v2: bool = False, level: str = "subsection") -> str:
         out += "Here " + ", ".join(f"${tex(syms[k])}$ denotes {_esc(v)}" for k, v in it.reads.items()) + ".\n"
     if v2 and it.extra:
         out += fix(it.extra) + "\n"
+    if v2 and it.evidence:
+        out += f"\\textit{{{it.evidence}}}\n"
+        if it.lean_stmt:
+            out += "{\\footnotesize\n\\begin{verbatim}\n" + it.lean_stmt + "\n\\end{verbatim}}\n"
     if v2:
         for l in it.links:
             out += f"This {it.kind} {EDGE_KINDS[l.kind][0]} {l.dst.latex_ref()} ({l.dst.kind})" \
@@ -1274,6 +1309,7 @@ def category_tex(cat, item_level: str = "subsection", **kw) -> str:
              ("Further reading: " + ", ".join(r.tex() for r in refs) + ".\n") if refs else "",
              _category_links_tex(cat)]
     parts += [_item_tex(it, v2=True, level=item_level) for it in list(cat.lemmas) + list(cat.theorems) + list(cat.results)]
+    parts += [f.figure() for f in cat.__dict__.get("__figures__", [])]          # long displays (dsl_display.Display)
     return "\n".join(x for x in parts if x) + "\n"
 
 
@@ -1328,6 +1364,7 @@ def selftest():
             require(B >= 0, d >= 0, r > 0, 4*E*B*(N + r)*d <= r)
             return binom(N + r, r) * (2*B*d)**r <= Rational(1, 2)**r
 
+        ok(lean_expr(sp.Integer(1) - 1 / _sym("k", Nat)) == "1 - 1 / (k : ℝ)", lean_expr(sp.Integer(1) - 1 / _sym("k", Nat)))   # no ℕ-typed k^(-1)
         t = clock_tail.lean()
         ok("(N r : ℕ)" in t and "(B d : ℝ)" in t, t)
         ok("(h2 : r > 0)" in t, t)

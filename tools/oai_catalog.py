@@ -188,6 +188,13 @@ class Catalog:
             self._edges = self._citation_edges() + self._mention_edges() + self._sharing_edges()
         return self._edges
 
+    def paper_cites(self) -> dict:
+        """``{manuscript directory: set of directories its bibliography cites}`` (``OAI:<directory>`` keys), without the
+        slower Lean analysis that ``edges()`` also does."""
+        if "manuscript_cites" not in self.__dict__:
+            self._citation_edges()
+        return self.manuscript_cites
+
     def _citation_edges(self) -> list[Edge]:
         dirs = set(self.manuscripts) | set(self.unmapped_dirs)
         by_dir: dict[tuple, list] = collections.defaultdict(list)

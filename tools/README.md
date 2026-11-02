@@ -102,6 +102,8 @@ In leandsl this needed: `Cat.connect(Other, kind=...)` between categories (kinds
 
 **Labels and references.** Every category and every item has a LaTeX label made from names alone: a category's own (`@lean.category(label=)`, else `cat:<ClassName>`; generated families are `fam:271`) and an item's `<category label>:<thm|lem|res>:<name>`, e.g. `fam:271:res:OAI.Heisenberg.spontaneous_magnetization`. The section or subsection of each is anchored by it (`\dsllabel{...}`, which the document gets from `leandsl.TEX_PREAMBLE`; hyperref is needed). To link from prose, `A.some_function.latex_ref()` (an item is also a class attribute, so a subclass `C(A, B)` finds it through Python's own lookup), `A.latex_ref(page=True)` for a category, with the page number added; or, inside the LaTeX of a `doc=`, docstring or `@lean.category(...)` text, `[[A]]`, `[[A.some_function]]`, `[[A.theorems.name]]`, `[[A.some_function|link text]]`, which are resolved when the document is made (so they may point forward) and raise `RefError` if they name nothing or are ambiguous. Python's own `class C(A, B)` is recorded as an `inherits` connection; the document says "Extends A, B", "Extended by ..." and lists what the class inherits, each as a link. Classes generated from the release (`__lean_literal__`) print their text as it is and no inheritance notes. `close_refs(doc)` turns a link to a label the document does not define into plain text and says which, `check_labels(doc)` lists dangling and duplicate labels, and `leandsl.graph()` returns categories, items and all links as nodes and edges; `oai_tree.py --graph FILE` writes them as JSON. `build_pdf` reads the xelatex log and fails on an undefined or multiply defined reference. Checked: the labels exist and are unique and every link in the document leads to one; not checked: that a link's *meaning* is right, which is the author's claim.
 
+**Long displays** ([dsl_display.py](dsl_display.py), after `sympy_models/concise.py`). `fig = Cat.display("name", caption=...)` makes a figure that is printed with the category; its rows are built from items and checked when they are added, so a failed check raises and nothing unverified is written. `fig.identity_row("energy", [a, b, c])`: the items are equations (`sp.Eq`), `reads=` says which letter of each denotes the quantity, each term is the item solved for it (exactly one root is required, as in the knowledge base: an even power refuses) and underbraced with the item's name, which is a link to its subsection; every solution is substituted back and must leave an identity. `fig.value_row(quantity, items, {letter: value}, label)` also requires the terms to be equal numbers (to 40 digits) under that assignment. `fig.chain_row(item)` draws an item's chain as one line, each step under the lemma it uses (or its `tag=`) with `[symbolic]` or `[sampled]`, and refuses a chain that does not reach the item's conclusion. `fig.link_row(a, b)` draws a `connect` link as an arrow. A row is refused if two of its items are linked `kind="field"` (a correspondence, not an equality), if a letter that two items both read is read differently, or if an equation has no unique solution. Rows are chosen by the author: a reading like "length" names a kind of quantity and the Planck length is not the Schwarzschild radius, so rows are never made by grouping readings. [dsl_models/physics_equations.py](dsl_models/physics_equations.py) rebuilds Figure 1 of the concise document from twelve items and the two links the knowledge base records among them (`python3 tools/dsl_display.py tools/dsl_models/physics_equations.py --pdf`); the Heisenberg model has its chain as one display. In the OpenAI document, models that extend no family get a section of their own. Not claimed: the identities are algebra on the stated formulas, not a check that a formula is the right physics; the equals sign says each item states the same quantity, not that other letters share a value; hypotheses are left out of the displays; sampled chain steps stay evidence, not proof.
+
 What is not claimed: the Lean statements are the Comparator files' text and were not compiled for the document; a connection is a fact about files (a bibliography entry, shared imports), not a claim about the mathematics; the family text is the release's own, converted to LaTeX.
 
 ### Python source via `ast`: loop invariants from asserts
@@ -154,3 +156,25 @@ Typical run times on a laptop: Bloch and KT about 3 seconds each, Haldane about 
 - yang-mills-mass-gap-lab imports `build/data/on_model_mc.json` with `ymlab.scaling_comparison.import_fork()`, recording this repository's commit hash with the data.
 
 Changing a script's JSON keys breaks both readers.
+
+## Papers, modules and Lean statements across families
+
+`oai_tree.py` builds one class tree for the whole release: root, discipline, family, and under each family the
+manuscripts (`paper:<dir>`) and the Lean modules (`mod:<module>`). `class C(A, B)` records `inherits`, so the
+hierarchy is a graph the labels and `latex_ref()` can walk. `connect_papers` adds the `cites` links between manuscripts
+from the catalogue's bibliography entries.
+
+`oai_lean.py` reads the arithmetic subset of Lean theorem and lemma statements (`+ - * / ^ ⁻¹ |x|`, `Real.sqrt/log/exp`,
+`Nat.choose/factorial`, min/max, casts, π). Natural-number subtraction and division are refused, since Lean truncates them.
+Each reading is checked by a round trip through the leandsl Lean printer and by sampling at least 10 points that satisfy
+the hypotheses; a refuted statement is dropped. "Sampled" is evidence, not proof. `uses` links are textual: the proof of
+A mentions the unique short name of B. `variable` declarations and conjunction conclusions are not read.
+
+    python3 tools/oai_tree.py --guide PHYSICS.md --lean-items --pdf   # Lean section and the cross-family figure
+    python3 tools/oai_tree.py --release-graph release.json           # whole-release nodes and edges
+    python3 tools/oai_lean.py --family 275                            # one family's reads
+
+On the physics slice, 1,131 statements were read from 89,654 theorems and lemmas, with 571 `uses` links. Every module
+belongs to one family, so none of those links joins two families, and the longest chain is 3 statements. The cross-family
+figure therefore shows one chain per family plus the catalogue's category-level `shares`/`cites` arrows, and says so.
+Statements longer than 70 characters are left out of the figure (`max_chars`) so it stays legible.
