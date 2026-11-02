@@ -548,7 +548,9 @@ def check_model(cat: Catalog, cls: type) -> list:
             if l.kind == "uses" and id(it) in found and id(l.dst) in found:
                 short = l.dst.source.rsplit(".", 1)[-1]
                 proof = found[id(it)][1].split(":=", 1)[-1]
-                if not re.search(rf"(?<![\w.'])" + re.escape(short) + r"(?![\w'])", proof):
+                # `d.name` is Lean field notation for a declaration of the namespace of d's type: a variable (lowercase) receiver
+                # is accepted before the name, a namespace (`Foo.name`, `Foo.Bar.name`) or a longer dotted path is not
+                if not re.search(rf"(?<![\w.'])(?:[a-z][\w']*\.)?" + re.escape(short) + r"(?![\w'])", proof):
                     out.append(f"{cls.__name__}.{it.name} is connected as using {l.dst.name}, but {short} does not occur in its proof")
     return out
 
