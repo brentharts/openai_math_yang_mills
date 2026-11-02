@@ -215,10 +215,16 @@ def _real(e) -> str:
     if isinstance(e, sp.factorial):
         return f"(({_nat(e)} : ℕ) : ℝ)"
     if isinstance(e, sp.Sum):
-        f, (k, lo, hi) = e.function, e.limits[0]
-        if lo != 0 or kind_of(k) is not Nat:
-            raise Unprintable("only sums  k = 0..n  over a Nat index are supported")
-        return f"∑ {lean_ident(k.name)} ∈ Finset.range ({_nat(hi + 1) if is_natexpr(hi + 1) else _nat(hi) + ' + 1'}), {_real(f)}"
+        # sympy merges Sum(Sum(f, (j, ..)), (i, ..)) into one Sum with several limits: the first is the innermost sum
+        out = _real(e.function)
+        for lim in e.limits:
+            if len(lim) != 3:
+                raise Unprintable("only definite sums are supported")
+            k, lo, hi = lim
+            if lo != 0 or kind_of(k) is not Nat:
+                raise Unprintable("only sums  k = 0..n  over a Nat index are supported")
+            out = f"∑ {lean_ident(k.name)} ∈ Finset.range ({_nat(hi + 1) if is_natexpr(hi + 1) else _nat(hi) + ' + 1'}), {out}"
+        return out
     if isinstance(e, AppliedUndef):
         return " ".join([lean_ident(e.func.__name__)] + [_atomR(a) for a in e.args])
     raise Unprintable(f"{type(e).__name__}: {e}")
@@ -1388,6 +1394,15 @@ def selftest():
             k = _sym("k", Nat)
             return sp.Sum(1/(k + 1), (k, 0, n))
         ok("Finset.range" in REGISTRY[-1].lean(), REGISTRY[-1].lean())
+
+        # a double sum: sympy merges the nested Sums into one with two limits, and every limit must be printed
+        kk, ii, jj = _sym("k", Nat), _sym("i", Nat), _sym("j", Nat)
+        dbl = lean_expr(sp.Sum(sp.Sum(ii + jj, (jj, 0, kk - 1)), (ii, 0, kk - 1)))
+        ok(dbl.startswith("∑ i ∈ Finset.range (k), ∑ j ∈ Finset.range (k), "), dbl)
+        tri = lean_expr(sp.Sum(sp.Sum(jj, (jj, 0, ii)), (ii, 0, kk - 1)))      # the inner bound uses the outer index
+        ok(tri.startswith("∑ i ∈ Finset.range (k), ∑ j ∈ Finset.range (1 + i), "), tri)
+        one = lean_expr(sp.Sum(1 / (kk + 1), (kk, 0, jj)))                       # one limit, as before
+        ok(one == "∑ k ∈ Finset.range (1 + j), 1 / ((1 + k : ℕ) : ℝ)", one)
 
         try:
             @lean.theorem
