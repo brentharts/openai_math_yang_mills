@@ -30,6 +30,9 @@ Reads the two-plaquette SU(2) lattice model (`sympy_models/models/su2_lattice_la
 - Classical formulas (Tutte, Mullin, KPZ) are quoted by name and checked by brute force or exact algebra; no source was retrieved for them. Quantum-group-deformed LQG is mentioned and not cited.
 - `document.py` gains the superscript one (U+00B9) for a manuscript title.
 
+## Sixth round
+- `models/su2_berger_top.py` (25 checks) and [SU2_BERGER_TOP.md](SU2_BERGER_TOP.md): the Laplace spectrum of SU(2) with a squashed Hopf fibre (Berger sphere), computed in the Peter-Weyl labels used here. It is a quantum symmetric top, `4[(j(j+1) - m'^2)/R2^2 + m'^2/R1^2]`; the fibre-constant sector is the round S^2 of radius R2/2, and the first nonzero eigenvalue is `min(8, 2 + 1/s^2)/R2^2`. The metric breaks one of a link's two SU(2) symmetries, so this is not a gauge-invariant deformation of the Casimir `j(j+1)` of the round case used above. Not part of the quantum gravity paper.
+
 ## Limits
 Not a model of quantum gravity: fixed graph, gauge-theory Hamiltonian, no diffeomorphism invariance, volume only for one four-valent vertex. The all-spin Immirzi value (about 0.2375) is quoted from Domagala-Lewandowski, not rederived. References are cited by arXiv ID; the Kogut-Susskind DOI is unchecked. Title and author line are placeholders.
 
