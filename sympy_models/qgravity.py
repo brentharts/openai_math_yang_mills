@@ -192,7 +192,7 @@ SELECTED = (
 )
 
 # every registered result the paper needs; if one is missing (a partial run of export.py) the paper is skipped, not half-built
-QG_MODELS = ("qg_spin_network", "qg_einstein4", "su2_lattice_strip", "su2_peter_weyl", "su2_lattice_stripn", "qg_volume", "qg_penrose", "su2_lattice_lshape", "forest_gauge_4d_theorems", "qg_kerr", "qg_planar_maps", "qg_su3_intertwiners", "qg_su2u1_matter")   # the models whose checks the paper counts as its own
+QG_MODELS = ("qg_spin_network", "qg_einstein4", "su2_lattice_strip", "su2_peter_weyl", "su2_lattice_stripn", "qg_volume", "qg_penrose", "su2_lattice_lshape", "forest_gauge_4d_theorems", "qg_kerr", "qg_planar_maps", "qg_su3_intertwiners", "qg_su2u1_matter", "qg_relational_clock", "qg_thiemann_trick")   # the models whose checks the paper counts as its own
 REQUIRED = ("su2_ladder_basis", "su2_ladder_weak", "su2_ladder_strong", "su2_ladder_gap",
             "qg_area_spectrum", "qg_casimir_dictionary", "qg_intertwiners", "qg_entropy_immirzi",
             "qg_quantum_tetrahedron", "qg_ladder_geometry",
@@ -203,7 +203,7 @@ REQUIRED = ("su2_ladder_basis", "su2_ladder_weak", "su2_ladder_strong", "su2_lad
             "su2_lshape_basis", "su2_lshape_volume", "su2_lshape_gap",
             "fg4t_linefield", "fg4t_partners", "fg4t_table1", "fg4t_theorems",
             "qg_kerr_horizons", "qg_kerr_penrose", "qg_kerr_quantum", "qg_maps_counts", "qg_maps_exponents", "qg_maps_su2k",
-            "qg_su3_intertwiners", "qg_su2u1_matter")
+            "qg_su3_intertwiners", "qg_su2u1_matter", "qg_relational_clock", "qg_thiemann_trick")
 
 # ---------------------------------------------------------------------------------------
 # helpers
@@ -620,7 +620,11 @@ def conclusion(pic: bool) -> str:
         "formula, agree with the triangle rule at trivalent and four-valent vertices, and are Catalan numbers for spin-$\\tfrac12$ legs. "
         "In the ground state of the ladder the surface that separates the plaquettes has a mean-square area that falls as $g^{-8}$ at "
         "strong coupling and grows as $g^{-2}$ at weak coupling, with exact coefficients. And counting spin-$\\tfrac12$ punctures against "
-        "the Bekenstein--Hawking entropy gives $\\gamma_I=\\ln2/(\\pi\\sqrt3)$, which is a statement about that count.\n\n"
+        "the Bekenstein--Hawking entropy gives $\\gamma_I=\\ln2/(\\pi\\sqrt3)$, which is a statement about that count. "
+        "Four further computations are exact finite checks that bear on the gauge group, the constraint and time without removing any of the three obstacles: the vertex invariants of $SU(3)$ "
+        "(Section~\\ref{sec:gauge}); Gauss's law for static $SU(2)\\times U(1)$ doublets on the ladder, with the anomaly sums and Yukawa invariants of one generation; a clock register for the ladder whose "
+        "physical states are history states (Section~\\ref{sec:time}); and the classical identities behind Thiemann's regularised constraint, with the vanishing of the volume at trivalent vertices. "
+        "None of them couples matter to the spin networks, constructs the Hamiltonian constraint, or tests whether its algebra closes.\n\n"
         "Six limits apply throughout. (i)~The ladder's Hamiltonian is a gauge-theory Hamiltonian, so its ground state is the ground "
         "state of that theory and not a state of quantum gravity; the geometry computed in it is the geometry that Hamiltonian "
         "induces on a fixed graph. (ii)~The value $0.1274$ of the Immirzi parameter comes from counting spin-$\\tfrac12$ punctures only; "
@@ -632,7 +636,7 @@ def conclusion(pic: bool) -> str:
         "diffeomorphism invariance, spin foams or a limit in which the lattice spacing disappears. (vi)~No matter field is coupled to the spin networks (Section~\\ref{sec:gauge} counts the vertex invariants of $SU(3)$ and of static $SU(2)\\times U(1)$ charges, and nothing more); "
         "the group $SU(2)$ is the structure group of the lattice gauge theory (and a factor of $Spin(4)$ in the part on Einstein four-manifolds), not the weak "
         "isospin group of the electroweak theory; the coupling $g$ is a parameter of the Hamiltonian and not a time, and the problem of time of quantum gravity "
-        "is not addressed.\n\n"
+        "is not addressed (Section~\\ref{sec:time} adds a clock by hand, which is a toy and not a solution).\n\n"
         "The natural next steps, in increasing distance from what is here: a volume prefactor for the triple product of Section~\\ref{sec:intertwiners}, and the weak-coupling region of the L-shaped cluster; whether $\\langle c_2(J)\\rangle$ at an "
         "interior link of a longer strip approaches a plateau; the plaquette operators $W_a$ and $W_b$, which are traces of holonomies around small loops and so "
         "of the kind a Thiemann-regularised Hamiltonian constraint is built from, composed with the volume, as the first step toward "
@@ -737,6 +741,8 @@ def write(out_dir: Path, eqs) -> list[Path]:
     mk, _ = show(by_key["qg_maps_su2k"])
     s3, _ = show(by_key["qg_su3_intertwiners"])
     s21, _ = show(by_key["qg_su2u1_matter"])
+    rc, _ = show(by_key["qg_relational_clock"])
+    tt, _ = show(by_key["qg_thiemann_trick"])
 
     lines = ["% Generated by sympy_models/qgravity.py. Do not edit by hand.\n"]
     lines.append(introduction(nums, fig_checks, pic))
@@ -1038,6 +1044,21 @@ def write(out_dir: Path, eqs) -> list[Path]:
                  "One generation of left-handed fields has vanishing anomaly sums and an even number of doublets, the group acting faithfully on the fields is the quotient by $\\mathbb{Z}_6$, and each of the three Yukawa vertices has exactly one "
                  "$SU(3)\\times SU(2)\\times U(1)$ invariant. That is representation theory: it does not couple a matter field to the spin networks of Part~II, define a matter Hamiltonian, "
                  "treat chirality on a lattice, or derive the gauge group or the number of generations (Section~\\ref{sec:scope} of the full paper lists the literature that attempts those).\n")
+
+    lines.append("\\section{Time and the constraint: two toy computations}\\label{sec:time}\n"
+                 "Two of the obstacles of quantum gravity are that the dynamics is a constraint and that there is no external time. This section does not remove either. "
+                 "The first display adds a clock to the ladder by hand: a register of $N$ readings and a constraint, linear in the lattice Hamiltonian, whose kernel is spanned by history states. "
+                 "Conditioning a physical state on a clock reading returns the Schr\\\"odinger state, and relational expectations of the plaquette operators equal the Heisenberg ones. "
+                 "It is a finite form of the idea of Page and Wootters, and the clock is a discretisation. "
+                 "The second display is not a quantum operator. It records the classical identities by which Thiemann rewrites the Euclidean constraint with holonomies and the volume "
+                 "(the inverse square root of the determinant becomes a Poisson bracket with the volume), checked exactly, and one quantum fact that follows from the volume alone: it vanishes at a trivalent vertex.\n")
+    lines.append(rc)
+    lines.append(tt)
+    lines.append("\\paragraph{Reading the two displays.} In the first, the kernel of the constraint has the dimension of the system and equals the span of the history states; a periodic register would have "
+                 "no physical state, and the constraints at two couplings $g$ have different kernels, so $g$ labels a constraint and is not a time. The constraint is linear in $H_S$: it is not the Hamiltonian constraint of loop quantum gravity, "
+                 "which involves the spatial dependence of the lapse, diffeomorphisms and a volume operator, and it does not touch the problem of time of vacuum gravity. "
+                 "In the second, the quantum operator is not built, because it changes the graph and needs recoupling coefficients at the new vertices whose phases are not guessed here (as in Section~\\ref{sec:intertwiners}); "
+                 "whether the algebra of such operators closes is a question about operators that this paper does not construct, and cannot be tested on a fixed graph.\n")
 
     lines.append("\\section{Gauge fixing and the curvature of the link: a four-dimensional lattice result}\\label{sec:forest}\n"
                  "A paper dated 30 October 2026 by Bhattacharjee, Bhattacharya, Lockwood and Romanov~\\cite{bbll-forest-4d} studies the Euclidean Wilson action "
